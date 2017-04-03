@@ -6,7 +6,7 @@ After=var.mount
 
 [Service]
 Type=oneshot
-Environment=TIMEZONE=UTC
+Environment=TIMEZONE=Europe/Kiev
 EnvironmentFile=-/storage/.cache/timezone
 ExecStartPre=/bin/sh -c 'exec /usr/bin/tzdata-config.start'
 ExecStartPre=/bin/mkdir -p /var/run
