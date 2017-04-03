@@ -1,0 +1,37 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.ru
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.ru)
+################################################################################
+
+PKG_NAME=vdr-cecremote
+HG_URL=http://hg.uli-eckhardt.de/cecremote
+HG_REV=latest
+
+echo "getting sources..."
+  if [ ! -d $PKG_NAME.hg ]; then
+    hg clone ${HG_URL} $PKG_NAME.hg
+  fi
+
+  cd $PKG_NAME.hg
+    if [ $HG_REV = latest ]; then
+      hg update
+      HG_REV=$(hg identify -n)
+    else
+      hg update $HG_REV
+    fi
+    cd ..
+
+echo "copying sources..."
+  rm -rf $PKG_NAME-$HG_REV
+  cp -R $PKG_NAME.hg $PKG_NAME-$HG_REV
+
+echo "cleaning sources..."
+  rm -rf $PKG_NAME-$HG_REV/.hg
+
+echo "packing sources..."
+  tar cvJf $PKG_NAME-$HG_REV.tar.xz $PKG_NAME-$HG_REV
+
+echo "remove temporary sourcedir..."
+#  rm -rf $PKG_NAME-$HG_REV
+  rm -rf $PKG_NAME.hg

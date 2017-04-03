@@ -1,0 +1,20 @@
+diff -Naurp vdr-plugin-smarttvweb-9c5761b/Makefile vdr-plugin-smarttvweb-9c5761b-patch/Makefile
+--- vdr-plugin-smarttvweb-9c5761b/Makefile	2016-01-04 12:06:57.000000000 +0200
++++ vdr-plugin-smarttvweb-9c5761b-patch/Makefile	2016-01-04 12:31:10.000000000 +0200
+@@ -48,7 +48,7 @@ SOFILE = libvdr-$(PLUGIN).so
+ 
+ ### Includes and Defines (add further entries here):
+ 
+-INCLUDES +=
++INCLUDES += -I$(VDRDIR)/include
+ 
+ DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
+ 
+@@ -112,7 +112,6 @@ install-lib: $(SOFILE)
+ 	cp widget.conf $(DESTDIR)$(CONFDIR)/plugins/smarttvweb; \
+ 	cp -r web/ $(DESTDIR)$(CONFDIR)/plugins/smarttvweb; \
+ 	cp smarttvweb.conf $(DESTDIR)$(CONFDIR)/plugins/smarttvweb; \
+-	chown -R vdr:vdr $(DESTDIR)$(CONFDIR)/plugins/smarttvweb; \
+ 	fi
+ 	install -D $^ $(DESTDIR)$(LIBDIR)/$^.$(APIVERSION)
+ 

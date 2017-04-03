@@ -1,0 +1,79 @@
+diff -Naurp emulationstation-cbf8638/es-app/src/guis/GuiMenu.cpp emulationstation-cbf8638-patch/es-app/src/guis/GuiMenu.cpp
+--- emulationstation-cbf8638/es-app/src/guis/GuiMenu.cpp	2016-04-21 10:13:26.000000000 +0300
++++ emulationstation-cbf8638-patch/es-app/src/guis/GuiMenu.cpp	2016-04-21 10:14:55.000000000 +0300
+@@ -209,8 +209,28 @@ GuiMenu::GuiMenu(Window* window) : GuiCo
+ 			mWindow->pushGui(new GuiDetectDevice(mWindow, false, nullptr));
+ 	});
+ 
++	addEntry("REBOOT", 0x777777FF, true, 
++		[this] {
++						SDL_Event ev;
++						ev.type = SDL_QUIT;
++						SDL_PushEvent(&ev);
++						runRestartCommand();
++	});
++
++	addEntry("SHUTDOWN", 0x777777FF, true, 
++		[this] {
++						SDL_Event ev;
++						ev.type = SDL_QUIT;
++						SDL_PushEvent(&ev);
++						runShutdownCommand();
++	});
++
+ 	addEntry("QUIT", 0x777777FF, true, 
+ 		[this] {
++						remove("/var/lock/start.games");
++						runSystemCommand("touch /var/lock/stop.retro");
++						runSystemCommand("touch /var/lock/start.kodi");
++						runSystemCommand("systemctl start kodi.service");
+ 						SDL_Event ev;
+ 						ev.type = SDL_QUIT;
+ 						SDL_PushEvent(&ev);
+diff -Naurp emulationstation-cbf8638/es-app/src/main.cpp emulationstation-cbf8638-patch/es-app/src/main.cpp
+--- emulationstation-cbf8638/es-app/src/main.cpp	2016-04-17 00:15:26.000000000 +0300
++++ emulationstation-cbf8638-patch/es-app/src/main.cpp	2016-04-21 15:12:30.000000000 +0300
+@@ -282,6 +282,10 @@ int main(int argc, char* argv[])
+ 			"QUIT", [] { 
+ 				SDL_Event* quit = new SDL_Event();
+ 				quit->type = SDL_QUIT;
++				remove("/var/lock/start.games");
++				runSystemCommand("touch /var/lock/stop.retro");
++				runSystemCommand("touch /var/lock/start.kodi");
++				runSystemCommand("systemctl start kodi.service");
+ 				SDL_PushEvent(quit);
+ 			}));
+ 	}
+diff -Naurp emulationstation-cbf8638/es-core/src/platform.cpp emulationstation-cbf8638-patch/es-core/src/platform.cpp
+--- emulationstation-cbf8638/es-core/src/platform.cpp	2016-04-17 00:15:26.000000000 +0300
++++ emulationstation-cbf8638-patch/es-core/src/platform.cpp	2016-04-21 11:02:10.000000000 +0300
+@@ -82,26 +82,15 @@ std::string getHomePath()
+ 
+ int runShutdownCommand()
+ {
+-#if defined(WIN32)
+-	return system("shutdown -s -t 0");
+-#elif defined(__linux__)
+ 	sync();
+-	return reboot(RB_POWER_OFF);
+-#else
+-	return system("sudo shutdown -h now");
+-#endif
++	return system("systemctl poweroff");
+ }
+ 
+ int runRestartCommand()
+ {
+-#if defined(WIN32)
+-	return system("shutdown -r -t 0");
+-#elif defined(__linux__)
++	remove("/var/lock/start.games");
+ 	sync();
+-	return reboot(RB_AUTOBOOT);
+-#else
+-	return system("sudo shutdown -r now");
+-#endif
++	return system("systemctl reboot");
+ }
+ 
+ int runSystemCommand(const std::string& cmd_utf8)

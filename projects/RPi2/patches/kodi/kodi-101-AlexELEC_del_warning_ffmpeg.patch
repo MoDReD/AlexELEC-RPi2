@@ -1,0 +1,18 @@
+diff --git a/xbmc/Application.cpp b/xbmc/Application.cpp
+index 226338f..ae1f61b 100644
+--- a/xbmc/Application.cpp
++++ b/xbmc/Application.cpp
+@@ -523,13 +523,6 @@ bool CApplication::Create()
+ #else  // !USE_STATIC_FFMPEG
+   CLog::Log(LOGNOTICE, "FFmpeg version: %s", FFMPEG_VERSION);
+ #endif // !USE_STATIC_FFMPEG
+-  if (!strstr(FFMPEG_VERSION, FFMPEG_VER_SHA))
+-  {
+-    if (strstr(FFMPEG_VERSION, "kodi"))
+-      CLog::Log(LOGNOTICE, "WARNING: unknown ffmpeg-kodi version detected");
+-    else
+-      CLog::Log(LOGNOTICE, "WARNING: unsupported ffmpeg version detected");
+-  }
+ #endif
+   
+   std::string cpuModel(g_cpuInfo.getCPUModel());

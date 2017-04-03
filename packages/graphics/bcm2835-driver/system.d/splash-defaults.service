@@ -1,0 +1,11 @@
+[Unit]
+Description=Splash defaults
+After=local-fs.target
+
+ConditionPathExists=!/storage/.cache/services/splash.conf
+ConditionPathExists=!/storage/.cache/services/splash.disabled
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'cp /usr/share/services/splash.conf /storage/.cache/services/'
+RemainAfterExit=yes

@@ -1,0 +1,33 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.ru
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.ru)
+################################################################################
+
+PKG_NAME="raspi2png"
+PKG_REPO="https://github.com/AndrewFromMelbourne/raspi2png.git"
+
+echo "getting sources..."
+  if [ ! -d $PKG_NAME.git ]; then
+    git clone $PKG_REPO $PKG_NAME.git
+  fi
+
+  cd $PKG_NAME.git
+    git pull
+    GIT_REV=`git log -n1 --format=%h`
+    rm -f $PKG_NAME
+  cd ..
+
+echo "copying sources..."
+  rm -rf $PKG_NAME-$GIT_REV
+  cp -R $PKG_NAME.git $PKG_NAME-$GIT_REV
+
+echo "cleaning sources..."
+  rm -rf $PKG_NAME-$GIT_REV/.git
+
+echo "packing sources..."
+  tar cvJf $PKG_NAME-$GIT_REV.tar.xz $PKG_NAME-$GIT_REV
+
+echo "remove temporary sourcedir..."
+  rm -rf $PKG_NAME.git
+# rm -rf $PKG_NAME-$GIT_REV

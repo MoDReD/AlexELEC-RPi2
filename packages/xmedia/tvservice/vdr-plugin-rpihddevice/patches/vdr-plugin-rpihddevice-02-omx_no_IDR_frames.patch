@@ -1,0 +1,172 @@
+diff -Naurp vdr-plugin-rpihddevice-5f28243/omx.c vdr-plugin-rpihddevice-5f28243-patch/omx.c
+--- vdr-plugin-rpihddevice-5f28243/omx.c	2016-01-06 10:21:23.000000000 +0200
++++ vdr-plugin-rpihddevice-5f28243-patch/omx.c	2016-01-12 12:34:00.000000000 +0200
+@@ -1008,9 +1009,14 @@ int cOmx::SetVideoCodec(cVideoCodec::eCo
+ 			OMX_IndexParamPortDefinition, &param) != OMX_ErrorNone)
+ 		ELOG("failed to set video decoder port parameters!");
+ 
+-	// start with valid frames only if codec is MPEG2
+-	// update: with FW from 2015/01/18 this is not necessary anymore
+-	SetVideoErrorConcealment(true /*codec == cVideoCodec::eMPEG2*/);
++	// fix H264: no IDR frames and no SEI recovery points
++	if (codec == cVideoCodec::eH264)
++	{
++		SetVideoErrorConcealment(cRpiSetup::IsStartValidFrame());
++		DLOG("H264 codec start with valid frame: %s", cRpiSetup::IsStartValidFrame() ? "true" : "false");
++	}
++	else
++		SetVideoErrorConcealment(true);
+ 
+ 	// update: with FW from 2014/02/04 this is not necessary anymore
+ 	//SetVideoDecoderExtraBuffers(3);
+diff -Naurp vdr-plugin-rpihddevice-5f28243/setup.c vdr-plugin-rpihddevice-5f28243-patch/setup.c
+--- vdr-plugin-rpihddevice-5f28243/setup.c	2016-01-06 10:21:23.000000000 +0200
++++ vdr-plugin-rpihddevice-5f28243-patch/setup.c	2016-01-12 11:12:45.000000000 +0200
+@@ -27,11 +27,13 @@ public:
+ 	cRpiSetupPage(
+ 			cRpiSetup::AudioParameters audio,
+ 			cRpiSetup::VideoParameters video,
+-			cRpiSetup::OsdParameters osd) :
++			cRpiSetup::OsdParameters osd,
++			cRpiSetup::VframeParameters frame) :
+ 
+ 		m_audio(audio),
+ 		m_video(video),
+-		m_osd(osd)
++		m_osd(osd),
++		m_frame(frame)
+ 	{
+ 		m_audioPort[0] = tr("analog");
+ 		m_audioPort[1] = tr("HDMI");
+@@ -90,8 +92,9 @@ protected:
+ 		SetupStore("FrameRate", m_video.frameRate);
+ 
+ 		SetupStore("AcceleratedOsd", m_osd.accelerated);
++		SetupStore("StartValidFrame", m_frame.vframe);
+ 
+-		cRpiSetup::GetInstance()->Set(m_audio, m_video, m_osd);
++		cRpiSetup::GetInstance()->Set(m_audio, m_video, m_osd, m_frame);
+ }
+ 
+ private:
+@@ -125,13 +128,17 @@ private:
+ 		Add(new cMenuEditBoolItem(
+ 				tr("Use GPU accelerated OSD"), &m_osd.accelerated));
+ 
++		Add(new cMenuEditBoolItem(
++				tr("Start H264 with valid frame"), &m_frame.vframe));
++
+ 		SetCurrent(Get(current));
+ 		Display();
+ 	}
+ 
+-	cRpiSetup::AudioParameters m_audio;
+-	cRpiSetup::VideoParameters m_video;
+-	cRpiSetup::OsdParameters   m_osd;
++	cRpiSetup::AudioParameters  m_audio;
++	cRpiSetup::VideoParameters  m_video;
++	cRpiSetup::OsdParameters    m_osd;
++	cRpiSetup::VframeParameters m_frame;
+ 
+ 	const char *m_audioPort[2];
+ 	const char *m_audioFormat[3];
+@@ -282,7 +289,7 @@ void cRpiSetup::SetHDMIChannelMapping(bo
+ 
+ cMenuSetupPage* cRpiSetup::GetSetupPage(void)
+ {
+-	return new cRpiSetupPage(m_audio, m_video, m_osd);
++	return new cRpiSetupPage(m_audio, m_video, m_osd, m_frame);
+ }
+ 
+ bool cRpiSetup::Parse(const char *name, const char *value)
+@@ -299,13 +306,15 @@ bool cRpiSetup::Parse(const char *name,
+ 		m_video.frameRate = atoi(value);
+ 	else if (!strcasecmp(name, "AcceleratedOsd"))
+ 		m_osd.accelerated = atoi(value);
++	else if (!strcasecmp(name, "StartValidFrame"))
++		m_frame.vframe = atoi(value);
+ 	else return false;
+ 
+ 	return true;
+ }
+ 
+ void cRpiSetup::Set(AudioParameters audio, VideoParameters video,
+-		OsdParameters osd)
++		OsdParameters osd, VframeParameters frame)
+ {
+ 	if (audio != m_audio)
+ 	{
+@@ -326,6 +335,11 @@ void cRpiSetup::Set(AudioParameters audi
+ 		m_osd = osd;
+ 		cRpiOsdProvider::ResetOsd(false);
+ 	}
++
++	if (frame != m_frame)
++	{
++		m_frame = frame;
++	}
+ }
+ 
+ bool cRpiSetup::ProcessArgs(int argc, char *argv[])
+diff -Naurp vdr-plugin-rpihddevice-5f28243/setup.h vdr-plugin-rpihddevice-5f28243-patch/setup.h
+--- vdr-plugin-rpihddevice-5f28243/setup.h	2016-01-06 10:21:23.000000000 +0200
++++ vdr-plugin-rpihddevice-5f28243-patch/setup.h	2016-01-12 12:17:49.000000000 +0200
+@@ -63,12 +63,25 @@ public:
+ 		}
+ 	};
+ 
++	struct VframeParameters
++	{
++		VframeParameters() :
++			vframe(1) { }
++
++		int vframe;
++
++		bool operator!=(const VframeParameters& a) {
++			return (a.vframe != vframe);
++		}
++	};
++
+ 	struct PluginParameters
+ 	{
+ 		PluginParameters() :
+-			hasOsd(true), display(0), videoLayer(0), osdLayer(2) { }
++			hasOsd(true), hasVframe(true), display(0), videoLayer(0), osdLayer(2) { }
+ 
+ 		bool hasOsd;
++		bool hasVframe;
+ 		int display;
+ 		int videoLayer;
+ 		int osdLayer;
+@@ -129,6 +142,14 @@ public:
+ 		return GetInstance()->m_plugin.hasOsd;
+ 	}
+ 
++	static bool IsStartValidFrame(void) {
++		return GetInstance()->m_frame.vframe != 0;
++	}
++
++	static bool HasVframe(void) {
++		return GetInstance()->m_plugin.hasVframe;
++	}
++
+ 	static int Display(void) {
+ 		return GetInstance()->m_plugin.display;
+ 	}
+@@ -149,7 +170,7 @@ public:
+ 	class cMenuSetupPage* GetSetupPage(void);
+ 	bool Parse(const char *name, const char *value);
+ 
+-	void Set(AudioParameters audio, VideoParameters video, OsdParameters osd);
++	void Set(AudioParameters audio, VideoParameters video, OsdParameters osd, VframeParameters frame);
+ 
+ 	static void SetAudioSetupChangedCallback(void (*callback)(void*), void* data = 0);
+ 	static void SetVideoSetupChangedCallback(void (*callback)(void*), void* data = 0);
+@@ -174,6 +195,7 @@ private:
+ 	AudioParameters  m_audio;
+ 	VideoParameters  m_video;
+ 	OsdParameters    m_osd;
++	VframeParameters m_frame;
+ 	PluginParameters m_plugin;
+ 
+ 	bool m_mpeg2Enabled;

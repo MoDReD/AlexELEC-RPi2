@@ -1,0 +1,29 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+. /etc/profile
+
+# RetroArch load BIOS
+load_retro_bios () {
+  if [ ! -f "/storage/retroarch/system/received.bios" ]; then
+    mkdir -p /storage/retroarch/system
+    ping -4 -c 1 -W 1 src.alexelec.in.ua > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      rm -fr /storage/retroarch/system/*
+      wget -P /storage/retroarch/system "http://src.alexelec.in.ua/RetroArch/bios/BIOS.zip" > /dev/null 2>&1
+      if [ $? -eq 0 ] ; then
+        unzip -q /storage/retroarch/system/BIOS.zip -d /storage/retroarch/system > /dev/null 2>&1
+        rm -f /storage/retroarch/system/BIOS.zip
+        touch /storage/retroarch/system/received.bios
+        logger -t RetroArch "loading BIOS files completed."
+      else
+        logger -t RetroArch "loading BIOS files failure."
+      fi
+    fi
+  fi
+}
+
+load_retro_bios

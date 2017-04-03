@@ -1,0 +1,30 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+echo "getting sources..."
+  if [ ! -d common-shaders.git ]; then
+    git clone https://github.com/libretro/common-shaders.git -b master common-shaders.git
+  fi
+
+  cd common-shaders.git
+    git pull
+    GIT_REV=`git log -n1 --format=%h`
+  cd ..
+
+echo "copying sources..."
+  rm -rf common-shaders-$GIT_REV
+  cp -R common-shaders.git common-shaders-$GIT_REV
+
+echo "cleaning sources..."
+  rm -rf common-shaders-$GIT_REV/.git
+  rm common-shaders-$GIT_REV/.gitignore
+
+echo "packing sources..."
+  tar cvJf common-shaders-$GIT_REV.tar.xz common-shaders-$GIT_REV
+
+echo "remove temporary sourcedir..."
+  rm -rf common-shaders-$GIT_REV
+  rm -rf common-shaders.git

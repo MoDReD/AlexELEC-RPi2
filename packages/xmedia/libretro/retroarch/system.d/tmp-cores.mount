@@ -1,0 +1,13 @@
+[Unit]
+Description=Cores directory RetroArch
+Before=retroarch.service
+ConditionPathExists=/var/lock/start.games
+
+[Mount]
+What=none
+Where=/tmp/cores
+Type=overlay
+Options=lowerdir=/usr/lib/libretro,upperdir=/storage/retroarch/cores,workdir=/storage/.tmp/cores-workdir
+
+[Install]
+WantedBy=kodi.target

@@ -1,0 +1,34 @@
+#!/bin/sh
+
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.ru
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.ru)
+################################################################################
+
+if [ -f /storage/.cache/services/hidmap.conf ] ; then
+  . /storage/.cache/services/hidmap.conf
+
+  [ "$(pidof hid_mapper)" ] && killall -9 hid_mapper > /dev/null 2>&1
+  HIDMAP_DIR="/storage/.config/hid_map"
+  HIDMAP_PROG=$1
+  [ -z "$HIDMAP_PROG" ] && HIDMAP_PROG="kodi"
+
+  case "$HIDMAP_DEVICE" in
+      "Yaocoo")
+          HIDMAP_VENDOR="1241"
+          HIDMAP_PRODUCT="e000"
+       ;;
+      "MiiiM6")
+          HIDMAP_VENDOR="1d57"
+          HIDMAP_PRODUCT="ac01"
+       ;;
+      "MiiiM8")
+          HIDMAP_VENDOR="1d57"
+          HIDMAP_PRODUCT="ac01"
+       ;;
+  esac
+
+  HIDMAP_CONFIG="$HIDMAP_DIR/$HIDMAP_PROG-$HIDMAP_DEVICE.map"
+  /usr/bin/hid_mapper --lookup-id --manufacturer $HIDMAP_VENDOR --product $HIDMAP_PRODUCT --map $HIDMAP_CONFIG > /dev/null 2>&1 &
+
+fi

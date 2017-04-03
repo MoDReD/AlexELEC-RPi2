@@ -1,0 +1,7 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.ru
+#      Copyright (C) 2011-2013 Alexandr Zuyev (alex@alexelec.ru)
+################################################################################
+
+exec /storage/.config/vdr/plugins/epgupdater/zvdrtools/svdrpsend.py "$@"

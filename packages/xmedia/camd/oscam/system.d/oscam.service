@@ -1,0 +1,17 @@
+[Unit]
+Description=Oscam Daemon
+Requires=oscam-switch.service
+After=network-online.target oscam-switch.service
+Before=vdr.service
+Wants=network-online.target
+ConditionPathExists=|/var/lock/start.oscam
+
+[Service]
+ExecStart=/bin/sh -c 'exec /usr/bin/oscam.start'
+TimeoutStopSec=1
+Restart=always
+RestartSec=2
+StartLimitInterval=0
+
+[Install]
+WantedBy=multi-user.target

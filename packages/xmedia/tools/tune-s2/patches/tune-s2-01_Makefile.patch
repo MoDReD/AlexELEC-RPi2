@@ -1,0 +1,17 @@
+diff -Naurp tune-s2-994a12b/Makefile tune-s2-994a12b-patch/Makefile
+--- tune-s2-994a12b/Makefile	2015-09-21 14:50:55.452916454 +0300
++++ tune-s2-994a12b-patch/Makefile	2015-09-21 13:59:29.000000000 +0300
+@@ -1,8 +1,12 @@
++CC      ?=
++CFLG    ?= -g -O3 -Wall -Wno-packed-bitfield-compat
++INCLUDE ?=
++
+ SRC=kb.c diseqc.c tune-s2.c
+ HED=kb.h diseqc.h tune-s2.h
+ OBJ=kb.o diseqc.o tune-s2.o
+ 
+-BIND=/usr/local/bin/
++BIND=/usr/bin/
+ 
+ TARGET=tune-s2
+ 

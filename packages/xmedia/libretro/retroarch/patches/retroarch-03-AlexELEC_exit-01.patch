@@ -1,0 +1,24 @@
+diff -Naurp retroarch-abe2a14/command.c retroarch-abe2a14-patch/command.c
+--- retroarch-abe2a14/command.c	2016-07-02 14:49:05.000000000 +0300
++++ retroarch-abe2a14-patch/command.c	2016-07-02 14:44:52.000000000 +0300
+@@ -2193,18 +2193,10 @@ bool command_event(enum event_command cm
+          }
+          break;
+       case CMD_EVENT_SHUTDOWN:
+-#if defined(__linux__) && !defined(ANDROID)
+-         runloop_msg_queue_push("Shutting down...", 1, 180, true);
+-         command_event(CMD_EVENT_QUIT, NULL);
+-         system("shutdown -P now");
+-#endif
+          break;
+       case CMD_EVENT_REBOOT:
+-#if defined(__linux__) && !defined(ANDROID)
+-         runloop_msg_queue_push("Rebooting...", 1, 180, true);
+-         command_event(CMD_EVENT_QUIT, NULL);
+-         system("shutdown -r now");
+-#endif
++         remove("/var/lock/start.games");
++         system("systemctl reboot");
+          break;
+       case CMD_EVENT_RESUME:
+          rarch_ctl(RARCH_CTL_MENU_RUNNING_FINISHED, NULL);

@@ -1,0 +1,63 @@
+diff -Naurp tune-s2-994a12b/tune-s2.c tune-s2-994a12b-patch/tune-s2.c
+--- tune-s2-994a12b/tune-s2.c	2015-09-21 14:50:55.452916454 +0300
++++ tune-s2-994a12b-patch/tune-s2.c	2015-09-21 14:16:55.000000000 +0300
+@@ -22,8 +22,16 @@
+ 
+ #include "tune-s2.h"
+ 
+-#if DVB_API_VERSION < 5
+-#error tune-s2 requires Linux DVB driver API version 5.0 or newer!
++#if DVB_API_VERSION < 5 || DVB_API_VERSION_MINOR < 2
++#error szap-s2 requires Linux DVB driver API version 5.2 and newer!
++#endif
++
++#ifndef DTV_STREAM_ID
++	#define DTV_STREAM_ID DTV_ISDBS_TS_ID
++#endif
++
++#ifndef NO_STREAM_ID_FILTER
++	#define NO_STREAM_ID_FILTER	(~0U)
+ #endif
+ 
+ int name2value(char *name, struct options *table)
+@@ -150,7 +158,7 @@ int tune(int frontend_fd, struct tune_p
+ 		{ .cmd = DTV_ROLLOFF,			.u.data = t->rolloff },
+ 		{ .cmd = DTV_BANDWIDTH_HZ,		.u.data = 0 },
+ 		{ .cmd = DTV_PILOT,				.u.data = t->pilot },
+-		{ .cmd = DTV_DVBS2_MIS_ID,		.u.data = t->mis },
++		{ .cmd = DTV_STREAM_ID,			.u.data = t->mis },
+ 		{ .cmd = DTV_TUNE },
+ 	};
+ 	struct dtv_properties cmdseq_tune = {
+@@ -212,8 +220,7 @@ int tune(int frontend_fd, struct tune_p
+ 		{ .cmd = DTV_ROLLOFF },
+ 		{ .cmd = DTV_BANDWIDTH_HZ },
+ 		{ .cmd = DTV_PILOT },
+-		{ .cmd = DTV_DVBS2_MIS_ID },
+-		{ .cmd = DTV_FRAME_LEN }
++		{ .cmd = DTV_STREAM_ID }
+ 	};
+ 
+ 	struct dtv_properties p_status = {
+diff -Naurp tune-s2-994a12b/tune-s2.h tune-s2-994a12b-patch/tune-s2.h
+--- tune-s2-994a12b/tune-s2.h	2015-09-21 14:50:55.452916454 +0300
++++ tune-s2-994a12b-patch/tune-s2.h	2015-09-21 14:13:22.000000000 +0300
+@@ -107,7 +107,6 @@ struct options dvb_system[] =
+ 	{ "DAB", SYS_DAB },
+ 	{ "ATSC", SYS_ATSC },
+ 	{ "TURBO", SYS_TURBO },
+-	{ "DCII", SYS_DCII },
+ 	{ NULL, 0 }
+ };
+ 
+@@ -126,10 +125,6 @@ struct options dvb_modulation[] =
+ 	{ "APSK_16", APSK_16 },
+ 	{ "APSK_32", APSK_32 },
+ 	{ "DQPSK", DQPSK },
+-	{ "C_QPSK", C_QPSK },
+-	{ "I_QPSK", I_QPSK },
+-	{ "Q_QPSK", Q_QPSK },
+-	{ "C_OQPSK", C_OQPSK },
+ 	{ NULL, 0 }
+ };
+ 

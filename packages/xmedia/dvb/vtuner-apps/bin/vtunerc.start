@@ -1,0 +1,43 @@
+#!/bin/sh
+
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+if [ -f /storage/.cache/services/vtunerc.conf ]; then
+  . /storage/.cache/services/vtunerc.conf
+
+  lsmod | grep vtunerc
+  [ $? == 1 ] && modprobe vtunerc
+
+  [ -z "$VTC_DEBUG" ] && VTC_DEBUG="none"
+  [ -z "$VTC_HOST" ] && VTC_HOST="none"
+  [ -z "$VTC_BUFF" ] && VTC_BUFF="none"
+  [ -z "$VTC_TYPE" ] && VTC_TYPE="S2"
+  
+
+  VTC_ARGS=""
+  [ "$VTC_HOST" != "none" ] && VTC_ARGS="-n $VTC_HOST"
+  [ "$VTC_BUFF" != "none" ] && VTC_ARGS="$VTC_ARGS -r $VTC_BUFF"
+
+  if [ "$VTC_DEBUG" == "none" ]; then
+      exec vtunerc -f $VTC_TYPE $VTC_ARGS > /dev/null 2>&1
+  else
+      case $VTC_DEBUG in
+          error)
+            DEBUG_LEVEL=1
+            ;;
+          warn)
+            DEBUG_LEVEL=2
+            ;;
+          info)
+            DEBUG_LEVEL=3
+            ;;
+          debug)
+            DEBUG_LEVEL=4
+            ;;
+      esac
+      exec vtunerc -f $VTC_TYPE $VTC_ARGS -v $DEBUG_LEVEL > /var/log/vtunerc.log 2>&1
+  fi
+fi

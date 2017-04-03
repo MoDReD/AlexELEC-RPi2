@@ -1,0 +1,217 @@
+# brand: Tevii
+# model no. of remote control: 
+# devices being controlled by this remote:
+#
+
+begin remote
+
+  name  tevii
+  bits           16
+  flags SPACE_ENC|CONST_LENGTH
+  eps            30
+  aeps          100
+
+  header       9028  4447
+  one           608  1637
+  zero          608   526
+  ptrail        606
+  repeat       9033  2197
+  pre_data_bits   16
+  pre_data       0xFF
+  gap          107826
+  toggle_bit_mask 0x0
+
+      begin codes
+          KEY_POWER                0x50AF
+          KEY_MUTE                 0x30CF
+          KEY_1                    0x8877
+          KEY_2                    0x48B7
+          KEY_3                    0xC837
+          KEY_4                    0x28D7
+          KEY_5                    0xA857
+          KEY_6                    0x6897
+          KEY_7                    0xE817
+          KEY_8                    0x18E7
+          KEY_9                    0x9867
+          KEY_0                    0x08F7
+          KEY_PREVIOUS             0x58A7
+          KEY_NEXT                 0xD827
+          KEY_VOLUMEUP             0x906F
+          KEY_VOLUMEDOWN           0xF00F
+          KEY_CHANNELUP            0x10EF
+          KEY_CHANNELDOWN          0x609F
+          KEY_STOP                 0xE01F
+          KEY_HOME                 0xA05F
+          KEY_OK                   0xF807
+          KEY_UP                   0x00FF
+          KEY_DOWN                 0x807F
+          KEY_RIGHT                0x40BF
+          KEY_LEFT                 0xC03F
+          KEY_MENU                 0x38C7
+          KEY_BACK                 0xB847
+          KEY_PLAY                 0x02FD
+          KEY_REWIND               0x7887
+          KEY_FORWARD              0xB24D
+          KEY_EPG                  0x22DD
+          KEY_RECORD               0x20DF
+          KEY_TIME                 0xD02F
+          KEY_OPEN                 0x708F
+          KEY_INFO                 0x32CD
+          KEY_AB                   0x827D
+          KEY_LANGUAGE             0xC23D
+          KEY_SUBTITLE             0xA25D
+          KEY_LIST                 0x52AD
+          KEY_F1                   0x629D
+          KEY_F2                   0xE21D
+          KEY_F3                   0x7A85
+          KEY_F4                   0x3AC5
+          KEY_F5                   0x4AB5
+          KEY_F6                   0x5AA5
+          KEY_CONTEXT_MENU         0x6A95
+          KEY_ZOOM                 0x1AE5
+      end codes
+
+end remote
+
+# brand: Amlogic
+# model no. of remote control: 
+# devices being controlled by this remote:
+#
+
+begin remote
+
+  name  amlogic
+  bits           16
+  flags SPACE_ENC|CONST_LENGTH
+  eps            30
+  aeps          100
+
+  header       8967  4405
+  one           589  1643
+  zero          589   524
+  ptrail        587
+  repeat       8965  2194
+  pre_data_bits   16
+  pre_data       0x807F
+  gap          106827
+  toggle_bit_mask 0x0
+
+      begin codes
+          KEY_POWER                0x02FD
+          KEY_STOP                 0x8F70
+          KEY_VOLUMEUP             0x2FD0
+          KEY_VOLUMEDOWN           0xCF30
+          KEY_RED                  0xC23D
+          KEY_GREEN                0xF00F
+          KEY_YELLOW               0x08F7
+          KEY_BLUE                 0x18E7
+          KEY_HOME                 0x8877
+          KEY_BACK                 0x9867
+          KEY_SWITCHVIDEOMODE      0x4FB0
+          KEY_MENU                 0x32CD
+          KEY_INFO                 0x00FF
+          KEY_MUTE                 0x827D
+          KEY_ESC                  0x42BD
+          KEY_UP                   0x6897
+          KEY_DOWN                 0x58A7
+          KEY_RIGHT                0x0AF5
+          KEY_LEFT                 0x8A75
+          KEY_OK                   0xC837
+          KEY_1                    0x728D
+          KEY_2                    0xB04F
+          KEY_3                    0x30CF
+          KEY_4                    0x52AD
+          KEY_5                    0x906F
+          KEY_6                    0x10EF
+          KEY_7                    0x629D
+          KEY_8                    0xA05F
+          KEY_9                    0x20DF
+          KEY_0                    0x807F
+      end codes
+
+end remote
+
+# model no. of remote control: CHUNGHOP LG E-L905
+# devices being controlled by this remote:
+#
+
+begin remote
+
+  name  LG_E_L905
+  bits           16
+  flags SPACE_ENC|CONST_LENGTH
+  eps            30
+  aeps          100
+
+  header       9045  4430
+  one           647  1611
+  zero          647   477
+  ptrail        644
+  repeat       9045  2171
+  pre_data_bits   16
+  pre_data       0x20DF
+  gap          107748
+  toggle_bit_mask 0x0
+
+      begin codes
+          KEY_SAT                  0xA956
+          KEY_POWER                0x10EF
+          KEY_MEDIA                0xD02F
+          KEY_AB                   0x0CF3
+          KEY_MODE                 0x0FF0
+          KEY_TV                   0xF00F
+          KEY_DIGITS               0x50AF
+          KEY_SLEEP                0x708F
+          KEY_SUBTITLE             0x9C63
+          KEY_0                    0x08F7
+          KEY_1                    0x8877
+          KEY_2                    0x48B7
+          KEY_3                    0xC837
+          KEY_4                    0x28D7
+          KEY_5                    0xA857
+          KEY_6                    0x6897
+          KEY_7                    0xE817
+          KEY_8                    0x18E7
+          KEY_9                    0x9867
+          KEY_LIST                 0xCA35
+          KEY_SWITCHVIDEOMODE      0x58A7
+          KEY_VIDEO                0x9A65
+          KEY_MENU                 0xC23D
+          KEY_INFO                 0xA25D
+          KEY_BACK                 0x14EB
+          KEY_EXIT                 0xDA25
+          KEY_UP                   0x02FD
+          KEY_DOWN                 0x827D
+          KEY_RIGHT                0x609F
+          KEY_LEFT                 0xE01F
+          KEY_OK                   0x22DD
+          KEY_VOLUMEUP             0x40BF
+          KEY_VOLUMEDOWN           0xC03F
+          KEY_CHANNELUP            0x00FF
+          KEY_CHANNELDOWN          0x807F
+          KEY_FAVORITES            0x7887
+          KEY_TEXT                 0x9E61
+          KEY_MUTE                 0x906F
+          KEY_RED                  0x4EB1
+          KEY_GREEN                0x8E71
+          KEY_YELLOW               0xC639
+          KEY_BLUE                 0x8679
+          KEY_PRINT                0xB24D
+          KEY_SOUND                0x4AB5
+          KEY_PC                   0x06F9
+          KEY_STOP                 0x8D72
+          KEY_PLAY                 0x0DF2
+          KEY_PAUSE                0x5DA2
+          KEY_FORWARD              0x718E
+          KEY_REWIND               0xF10E
+          KEY_RECORD               0xBD42
+          KEY_TITLE                0xD52A
+          KEY_D                    0x3BC4
+          KEY_KPPLUS               0x8778
+          KEY_KPMINUS              0x07F8
+          KEY_QUESTION             0x55AA
+          KEY_OPTION               0x7E81
+          KEY_LANGUAGE             0x857A
+      end codes
+
+end remote

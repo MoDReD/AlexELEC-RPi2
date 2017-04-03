@@ -1,0 +1,23 @@
+diff -Naurp ljalves-2015-09-10/media/drivers/media/usb/em28xx/em28xx-dvb.c ljalves-2015-09-10-patch/media/drivers/media/usb/em28xx/em28xx-dvb.c
+--- ljalves-2015-09-10/media/drivers/media/usb/em28xx/em28xx-dvb.c	2015-09-14 15:51:06.000000000 +0300
++++ ljalves-2015-09-10-patch/media/drivers/media/usb/em28xx/em28xx-dvb.c	2015-11-16 15:13:01.000000000 +0200
+@@ -41,7 +41,7 @@
+ #include "mt352.h"
+ #include "mt352_priv.h" /* FIXME */
+ #include "tda1002x.h"
+-#include "drx39xyj/drx39xxj.h"
++#include "drx39xxj.h"
+ #include "tda18271.h"
+ #include "s921.h"
+ #include "drxd.h"
+diff -Naurp ljalves-2015-09-10/media_build/backports/backports.txt ljalves-2015-09-10-patch/media_build/backports/backports.txt
+--- ljalves-2015-09-10/media_build/backports/backports.txt	2015-09-14 15:51:05.000000000 +0300
++++ ljalves-2015-09-10-patch/media_build/backports/backports.txt	2015-11-16 15:12:05.000000000 +0200
+@@ -24,7 +24,6 @@
+ add api_version.patch
+ add pr_fmt.patch
+ add debug.patch
+-add drx39xxj.patch
+ 
+ [4.0.255]
+ add v4.0_dma_buf_export.patch

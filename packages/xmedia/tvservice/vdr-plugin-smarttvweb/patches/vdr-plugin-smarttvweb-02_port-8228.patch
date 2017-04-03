@@ -1,0 +1,23 @@
+diff -Naurp vdr-plugin-smarttvweb-6a84ee7/smarttvweb.conf vdr-plugin-smarttvweb-6a84ee7-patch/smarttvweb.conf
+--- vdr-plugin-smarttvweb-6a84ee7/smarttvweb.conf	2014-10-06 15:26:30.000000000 +0300
++++ vdr-plugin-smarttvweb-6a84ee7-patch/smarttvweb.conf	2014-10-06 14:48:55.000000000 +0300
+@@ -1,8 +1,8 @@
+ #
+ 
+-# LogFile /var/log/smarttvweb/smarttvweb.log
++#LogFile /var/log/smarttvweb.log
+ 
+-MediaFolder /var/lib/media
++MediaFolder /storage/videos
+ 
+ # Media Segment Duration for HLS/ DASH
+ SegmentDuration 10
+@@ -27,7 +27,7 @@ GroupSeparators Ignore
+ #ServerAddress 127.0.0.1
+ 
+ # Bind the web server to a specific port. Default is Port 8000.
+-#ServerPort 8000
++ServerPort 8228
+ 
+ # Allow execution of reccmd.conf or commands.conf defined programs through the widget. 
+ # Ensure that only authorized hosts get access to the plugin (e.g. firewall protected).

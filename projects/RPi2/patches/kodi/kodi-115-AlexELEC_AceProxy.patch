@@ -1,0 +1,55 @@
+diff -Naurp kodi-16.1-rc3-2baa512/xbmc/Application.cpp kodi-16.1-rc3-2baa512-patch/xbmc/Application.cpp
+--- kodi-16.1-rc3-2baa512/xbmc/Application.cpp	2016-04-11 17:57:04.000000000 +0300
++++ kodi-16.1-rc3-2baa512-patch/xbmc/Application.cpp	2016-04-11 17:03:22.000000000 +0300
+@@ -1086,10 +1086,11 @@ void CApplication::CreateUserDirs()
+ bool CApplication::Initialize()
+ {
+   // start TV backend
+-  std::ifstream isRunVDR, isRunTVH, isRunACE;
++  std::ifstream isRunVDR, isRunTVH, isRunACE, isRunProxy;
+   isRunVDR.open("/storage/.cache/services/vdr-backend.conf");
+   isRunTVH.open("/storage/.cache/services/tvheadend.conf");
+   isRunACE.open("/storage/.cache/services/acestream.conf");
++  isRunProxy.open("/storage/.cache/services/aceproxy.conf");
+ 
+   if(isRunVDR.good())
+     system("systemctl start vdr-backend.service");
+@@ -1097,9 +1098,12 @@ bool CApplication::Initialize()
+     system("systemctl start tvheadend.service");
+   if(isRunACE.good())
+     system("systemctl start acestream.service");
++  if(isRunProxy.good())
++    system("systemctl start aceproxy.service");
+   isRunVDR.close();
+   isRunTVH.close();
+   isRunACE.close();
++  isRunProxy.close();
+ 
+ #if defined(HAS_DVD_DRIVE) && !defined(TARGET_WINDOWS) // somehow this throws an "unresolved external symbol" on win32
+   // turn off cdio logging
+@@ -2946,20 +2950,24 @@ void CApplication::Stop(int exitCode)
+   try
+   {
+     // stop TV backend
+-    std::ifstream isRunVDR, isRunTVH, isRunACE;
++    std::ifstream isRunVDR, isRunTVH, isRunACE, isRunProxy;
+     isRunVDR.open("/storage/.cache/services/vdr-backend.conf");
+     isRunTVH.open("/storage/.cache/services/tvheadend.conf");
+     isRunACE.open("/storage/.cache/services/acestream.conf");
++    isRunProxy.open("/storage/.cache/services/aceproxy.conf");
+ 
+     if(isRunVDR.good())
+       system("systemctl stop vdr-backend.service");
+     if(isRunTVH.good())
+       system("systemctl stop tvheadend.service");
++    if(isRunProxy.good())
++      system("systemctl stop aceproxy.service");
+     if(isRunACE.good())
+       system("systemctl stop acestream.service");
+     isRunVDR.close();
+     isRunTVH.close();
+     isRunACE.close();
++    isRunProxy.close();
+ 
+     CVariant vExitCode(CVariant::VariantTypeObject);
+     vExitCode["exitcode"] = m_ExitCode;

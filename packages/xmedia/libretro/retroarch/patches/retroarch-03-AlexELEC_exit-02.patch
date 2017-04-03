@@ -1,0 +1,52 @@
+diff -Naurp retroarch-0775687/menu/menu_setting.c retroarch-0775687-patch/menu/menu_setting.c
+--- retroarch-0775687/menu/menu_setting.c	2016-07-02 22:37:22.000000000 +0300
++++ retroarch-0775687-patch/menu/menu_setting.c	2016-07-03 08:51:21.000000000 +0300
+@@ -4136,40 +4136,25 @@ static bool setting_append_list(
+                parent_group);
+          menu_settings_list_current_add_enum_idx(list, list_info, MENU_ENUM_LABEL_HELP_LIST);
+ 
+-#if !defined(IOS)
+-         /* Apple rejects iOS apps that lets you forcibly quit an application. */
+          CONFIG_ACTION(
+                list, list_info,
+-               msg_hash_to_str(MENU_ENUM_LABEL_QUIT_RETROARCH),
+-               msg_hash_to_str(MENU_ENUM_LABEL_VALUE_QUIT_RETROARCH),
+-               &group_info,
+-               &subgroup_info,
+-               parent_group);
+-         menu_settings_list_current_add_cmd(list, list_info, CMD_EVENT_QUIT);
+-         menu_settings_list_current_add_enum_idx(list, list_info, MENU_ENUM_LABEL_QUIT_RETROARCH);
+-#endif
+-
+-#if defined(HAVE_LAKKA)
+-         CONFIG_ACTION(
+-               list, list_info,
+-               msg_hash_to_str(MENU_ENUM_LABEL_SHUTDOWN),
+-               msg_hash_to_str(MENU_ENUM_LABEL_VALUE_SHUTDOWN),
++               msg_hash_to_str(MENU_ENUM_LABEL_REBOOT),
++               msg_hash_to_str(MENU_ENUM_LABEL_VALUE_REBOOT),
+                &group_info,
+                &subgroup_info,
+                parent_group);
+-         menu_settings_list_current_add_cmd(list, list_info, CMD_EVENT_SHUTDOWN);
+-         menu_settings_list_current_add_enum_idx(list, list_info, MENU_ENUM_LABEL_SHUTDOWN);
++         menu_settings_list_current_add_cmd(list, list_info, CMD_EVENT_REBOOT);
++         menu_settings_list_current_add_enum_idx(list, list_info, MENU_ENUM_LABEL_REBOOT);
+ 
+          CONFIG_ACTION(
+                list, list_info,
+-               msg_hash_to_str(MENU_ENUM_LABEL_REBOOT),
+-               msg_hash_to_str(MENU_ENUM_LABEL_VALUE_REBOOT),
++               msg_hash_to_str(MENU_ENUM_LABEL_QUIT_RETROARCH),
++               msg_hash_to_str(MENU_ENUM_LABEL_VALUE_QUIT_RETROARCH),
+                &group_info,
+                &subgroup_info,
+                parent_group);
+-         menu_settings_list_current_add_cmd(list, list_info, CMD_EVENT_REBOOT);
+-         menu_settings_list_current_add_enum_idx(list, list_info, MENU_ENUM_LABEL_REBOOT);
+-#endif
++         menu_settings_list_current_add_cmd(list, list_info, CMD_EVENT_QUIT);
++         menu_settings_list_current_add_enum_idx(list, list_info, MENU_ENUM_LABEL_QUIT_RETROARCH);
+ 
+          CONFIG_ACTION(
+                list, list_info,

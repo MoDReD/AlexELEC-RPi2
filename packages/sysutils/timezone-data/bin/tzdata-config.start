@@ -1,0 +1,15 @@
+#!/bin/sh
+
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+GUI_FILE="/storage/.kodi/userdata/guisettings.xml"
+
+if [ -f $GUI_FILE ]; then
+  TIME_ZONE=$(cat $GUI_FILE | grep '<timezone>' | sed -e 's/<timezone>//' -e 's/<\/timezone>//' -e 's/^[ \t]*//')
+  if [ -n $TIME_ZONE ]; then
+    echo "TIMEZONE=$TIME_ZONE" > /storage/.cache/timezone
+  fi
+fi

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+. config/options $1
+
+mkdir -p $RELEASE_DIR/3rdparty/bootloader
+  cp -PR $BUILD/bcm2835-bootloader-*/LICENCE* $RELEASE_DIR/3rdparty/bootloader/
+  cp -PR $BUILD/bcm2835-bootloader-*/bootcode.bin $RELEASE_DIR/3rdparty/bootloader/
+  cp -PR $BUILD/bcm2835-bootloader-*/fixup_x.dat $RELEASE_DIR/3rdparty/bootloader/fixup.dat
+  cp -PR $BUILD/bcm2835-bootloader-*/start_x.elf $RELEASE_DIR/3rdparty/bootloader/start.elf
+  cp -PR $INSTALL/usr/share/bootloader/*.dtb $RELEASE_DIR/3rdparty/bootloader/
+  cp -PR $INSTALL/usr/share/bootloader/overlays $RELEASE_DIR/3rdparty/bootloader/

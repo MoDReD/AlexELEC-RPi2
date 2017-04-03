@@ -1,0 +1,40 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+. /etc/profile
+
+LOCK_DIR="/var/lock"
+SERVICE_DIR="/storage/.cache/services"
+
+# wicard service stop
+wicard_stop () {
+  if [ -f "$SERVICE_DIR/wicard.conf" ]; then
+    . $SERVICE_DIR/wicard.conf
+    if [ "$WICARD_TYPE" == "TVonly" ]; then
+      rm -f $LOCK_DIR/start.wicard
+      systemctl stop wicard.service
+    fi
+  fi
+}
+
+# oscam service stop
+oscam_stop () {
+  if [ -f "$SERVICE_DIR/oscam.conf" ]; then
+    . $SERVICE_DIR/oscam.conf
+    if [ "$OSCAM_TYPE" == "TVonly" ]; then
+      rm -f $LOCK_DIR/start.oscam
+      systemctl stop oscam.service
+    fi
+  fi
+}
+
+logger -t tvheadend "Tvheadend stop..."
+wicard_stop
+oscam_stop
+echo ondemand > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+echo 50 > /sys/devices/system/cpu/cpufreq/ondemand/up_threshold
+echo 355000 > /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate
+echo 10 > /sys/devices/system/cpu/cpufreq/ondemand/sampling_down_factor

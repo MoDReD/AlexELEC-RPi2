@@ -1,0 +1,12 @@
+diff -Naurp ljalves-2015-09-10/media_build/v4l/scripts/make_config_compat.pl ljalves-2015-09-10-patch/media_build/v4l/scripts/make_config_compat.pl
+--- ljalves-2015-09-10/media_build/v4l/scripts/make_config_compat.pl	2015-09-14 15:51:05.000000000 +0300
++++ ljalves-2015-09-10-patch/media_build/v4l/scripts/make_config_compat.pl	2016-04-06 10:57:53.000000000 +0300
+@@ -643,7 +643,7 @@ sub check_other_dependencies()
+ 	check_files_for_func("DMA_ATTR_SKIP_CPU_SYNC", "NEED_DMA_ATTR_SKIP_CPU_SYNC", "include/linux/dma-attrs.h");
+ 	check_files_for_func("sign_extend32", "NEED_SIGN_EXTEND32", "include/linux/bitops.h");
+ 	check_files_for_func("netdev_dbg", "NEED_NETDEV_DBG", "include/linux/netdevice.h");
+-	check_files_for_func("writel_relaxed", "NEED_WRITEL_RELAXED", "include/asm-generic/io.h");
++	check_files_for_func("writel_relaxed", "NEED_WRITEL_RELAXED", "arch/arm/include/asm/io.h");
+ 	check_files_for_func("get_user_pages_unlocked", "NEED_GET_USER_PAGES_UNLOCKED", "include/linux/mm.h");
+ 	check_files_for_func("pr_warn_once", "NEED_PR_WARN_ONCE", "include/linux/printk.h");
+ 	check_files_for_func("DIV_ROUND_CLOSEST_ULL", "NEED_DIV_ROUND_CLOSEST_ULL", "include/linux/kernel.h");

@@ -1,0 +1,138 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+. /etc/profile
+
+LOCK_DIR="/var/lock"
+SERVICE_DIR="/storage/.cache/services"
+VDR_CONFIG_DIR="/storage/.config/vdr"
+
+. $SERVICE_DIR/vdr.conf
+[ -f "$VDR_CONFIG_DIR/vdr-plugins.conf" ] && . $VDR_CONFIG_DIR/vdr-plugins.conf
+[ -f "$SERVICE_DIR/locale.conf" ] && . $SERVICE_DIR/locale.conf
+
+ace_start() {
+  if [ "$VDR_SHELL" == "1" ]; then
+    if [ -f $SERVICE_DIR/acestream.conf ]; then
+      . $SERVICE_DIR/acestream.conf
+      if [ "$ACE_ALWAYS" == "1" ] && [ ! -f $LOCK_DIR/acestream.always ]; then
+        systemctl start acestream.service
+      fi
+    fi
+    if [ -f $SERVICE_DIR/aceproxy.conf ]; then
+      . $SERVICE_DIR/aceproxy.conf
+      if [ "$ACEPROXY_ALWAYS" == "1" ] && [ ! -f $LOCK_DIR/aceproxy.always ]; then
+        systemctl start aceproxy.service
+      fi
+    fi
+  fi
+}
+
+force_stop_kodi() {
+  (
+    if [ "$(pidof kodi.bin)" ]; then
+      sleep 6
+      if [ "$(pidof kodi.bin)" ]; then
+        logger -t vdr "forced stop KODI"
+        systemctl stop kodi.service
+      fi
+    fi
+  ) &
+}
+
+vdr_init() {
+
+  [ "$VDR_CPU_FREQ" == "1" ] && echo 'performance' > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+  
+  mkdir -p /storage/recordings
+  mkdir -p /storage/.cache/vdr
+
+  [ -z "$SYS_LOCALE" ] && SYS_LOCALE="ru_RU.UTF-8"
+
+  if [ "$VDR_DEBUG" == "1" ]; then
+      VDR_ARGS="--log=3"
+  else
+      VDR_ARGS="--log=1"
+  fi
+
+  if [ -d "$VDR_VIDEO_DIR" ]; then
+       VDR_ARGS="$VDR_ARGS --video=\"$VDR_VIDEO_DIR\""
+  fi
+
+  VDR_ARGS="$VDR_ARGS -P rpihddevice"
+  [ "$VDR_DVBAPI" == "1" ] && VDR_ARGS="$VDR_ARGS -P'dvbapi -d'"
+  [ "$VDR_IPTV" == "1" ] && VDR_ARGS="$VDR_ARGS -P iptv"
+  [ "$VDR_SATIP" == "1" ] && VDR_ARGS="$VDR_ARGS -P satip"
+  [ "$VDR_EPGSEARCH" == "1" ] && VDR_ARGS="$VDR_ARGS -P epgsearch"
+  [ "$VDR_STREAMDEV_SERVER" == "1" ] && VDR_ARGS="$VDR_ARGS -P streamdev-server"
+  [ "$VDR_STREAMDEV_CLIENT" == "1" ] && VDR_ARGS="$VDR_ARGS -P streamdev-client -P epgsync -P svdrpservice"
+  [ "$VDR_CHSCAN" == "1" ] && VDR_ARGS="$VDR_ARGS -P channelscan"
+  [ "$VDR_FEMON" == "1" ] && VDR_ARGS="$VDR_ARGS -P femon"
+  [ "$VDR_SYSINFO" == "1" ] && VDR_ARGS="$VDR_ARGS -P systeminfo"
+  [ "$VDR_SLEEP" == "1" ] && VDR_ARGS="$VDR_ARGS -P sleeptimer"
+  [ -z "$VDR_PVR" ] && VDR_PVR="none"
+  [ ! "$VDR_PVR" == "none" ] && VDR_ARGS="$VDR_ARGS -P $VDR_PVR"
+  [ "$VDR_CEC" == "1" ] && VDR_ARGS="$VDR_ARGS -P cecremote"
+  [ "$VDR_TVSCRAPER" == "1" ] && VDR_ARGS="$VDR_ARGS -P tvscraper"
+  [ "$VDR_SKIN_FLATPLUS" == "1" ] && VDR_ARGS="$VDR_ARGS -P skinflatplus"
+  [ "$VDR_SKIN_NOPACITY" == "1" ] && VDR_ARGS="$VDR_ARGS -P skinnopacity"
+  [ "$VDR_PIN" == "1" ] && VDR_ARGS="$VDR_ARGS -P pin"
+  [ "$VDR_SKIN_DESIGNER" == "1" ] && VDR_ARGS="$VDR_ARGS -P skindesigner"
+  [ "$VDR_TVGUIDENG" == "1" -a "$VDR_SKIN_DESIGNER" == "1" ] && VDR_ARGS="$VDR_ARGS -P tvguideng"
+  [ "$VDR_WEATHER" == "1" ] && VDR_ARGS="$VDR_ARGS -P weatherforecast"
+  [ "$VDR_ZAPHISTORY" == "1" ] && VDR_ARGS="$VDR_ARGS -P zaphistory"
+  [ "$VDR_SMARTTVWEB" == "1" ] && VDR_ARGS="$VDR_ARGS -P smarttvweb"
+  [ "$VDR_CLOCK" == "1" ] && VDR_ARGS="$VDR_ARGS -P clock"
+
+  [ -n "$VDR_PLUGINS" ] && VDR_ARGS="$VDR_ARGS $VDR_PLUGINS"
+
+  if [ "$VDR_LIVE" == "1" ]; then
+      mkdir -p /storage/.cache/vdr/epgimages
+      VDR_ARGS="$VDR_ARGS -P'live --ip=0.0.0.0 -e /storage/.cache/vdr/epgimages'"
+      if [ ! -e /storage/.config/vdr/plugins/live/live.pem ] || [ ! -e /storage/.config/vdr/plugins/live/live-key.pem ]; then
+          openssl req -new -x509 -nodes -days 9999 -batch -subj "/" -outform pem -out /storage/.config/vdr/plugins/live/live.pem -keyout /storage/.config/vdr/plugins/live/live-key.pem > /dev/null 2>&1
+      fi
+  fi
+
+}
+
+# wicard service start
+if [ -f "$SERVICE_DIR/wicard.conf" ]; then
+  . $SERVICE_DIR/wicard.conf
+  if [ "$WICARD_TYPE" == "TVonly" ]; then
+      if [ -f "$LOCK_DIR/start.wicard" ]; then
+          rm -f $LOCK_DIR/start.wicard
+          systemctl stop wicard.service
+      fi
+      touch $LOCK_DIR/start.wicard
+      systemctl start wicard.service
+  fi
+fi
+
+# oscam service start
+if [ -f "$SERVICE_DIR/oscam.conf" ]; then
+  . $SERVICE_DIR/oscam.conf
+  if [ "$OSCAM_TYPE" == "TVonly" ]; then
+      if [ -f "$LOCK_DIR/start.oscam" ]; then
+          rm -f $LOCK_DIR/start.oscam
+          systemctl stop oscam.service
+      fi
+      touch $LOCK_DIR/start.oscam
+      systemctl start oscam.service
+  fi
+fi
+
+# AceStream & AceProxy
+ace_start
+
+# Animated splash
+start_splash vdr
+
+# VDR service start
+vdr_init
+force_stop_kodi
+logger -t vdr "VDR Fronend start: $VDR_ARGS"
+eval LANG=$SYS_LOCALE exec vdr -t /dev/tty1 --lirc=/run/lirc/lircd $VDR_ARGS > /dev/null 2>&1

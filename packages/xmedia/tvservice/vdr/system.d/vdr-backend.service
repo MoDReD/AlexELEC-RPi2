@@ -1,0 +1,15 @@
+[Unit]
+Description=VDR backend service
+ConditionPathExists=/storage/.cache/services/vdr-backend.conf
+
+[Service]
+ExecStart=/bin/sh -c 'exec /usr/bin/vdr-backend.start'
+ExecStop=/bin/kill -KILL $MAINPID
+ExecStopPost=/bin/sh -c 'exec /usr/bin/vdr.stop back'
+TimeoutStopSec=10
+Restart=always
+RestartSec=2
+StartLimitInterval=0
+
+[Install]
+WantedBy=kodi.target

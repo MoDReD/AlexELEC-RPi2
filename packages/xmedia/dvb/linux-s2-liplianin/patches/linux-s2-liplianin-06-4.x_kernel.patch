@@ -1,0 +1,294 @@
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/common/saa7146/saa7146_core.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/common/saa7146/saa7146_core.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/common/saa7146/saa7146_core.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/common/saa7146/saa7146_core.c	2015-11-03 14:59:59.000000000 +0200
+@@ -411,7 +411,7 @@ static int saa7146_init_one(struct pci_d
+ 	saa7146_write(dev, MC2, 0xf8000000);
+ 
+ 	/* request an interrupt for the saa7146 */
+-	err = request_irq(pci->irq, interrupt_hw, IRQF_SHARED | IRQF_DISABLED,
++	err = request_irq(pci->irq, interrupt_hw, IRQF_SHARED,
+ 			  dev->name, dev);
+ 	if (err < 0) {
+ 		ERR("request_irq() failed\n");
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/dvb-core/dvb_net.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/dvb-core/dvb_net.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/dvb-core/dvb_net.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/dvb-core/dvb_net.c	2015-11-03 14:54:09.000000000 +0200
+@@ -1222,7 +1222,6 @@ static int dvb_net_stop(struct net_devic
+ static const struct header_ops dvb_header_ops = {
+ 	.create		= eth_header,
+ 	.parse		= eth_header_parse,
+-	.rebuild	= eth_rebuild_header,
+ };
+ 
+ 
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/i2c/adv7180.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/i2c/adv7180.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/i2c/adv7180.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/i2c/adv7180.c	2015-11-03 14:49:08.000000000 +0200
+@@ -650,10 +650,6 @@ static struct i2c_driver adv7180_driver
+ 		   },
+ 	.probe = adv7180_probe,
+ 	.remove = adv7180_remove,
+-#ifdef CONFIG_PM
+-	.suspend = adv7180_suspend,
+-	.resume = adv7180_resume,
+-#endif
+ 	.id_table = adv7180_id,
+ };
+ 
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/bt8xx/bt878.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/bt8xx/bt878.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/bt8xx/bt878.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/bt8xx/bt878.c	2015-11-03 15:30:57.000000000 +0200
+@@ -488,7 +488,7 @@ static int bt878_probe(struct pci_dev *d
+ 	btwrite(0, BT848_INT_MASK);
+ 
+ 	result = request_irq(bt->irq, bt878_irq,
+-			     IRQF_SHARED | IRQF_DISABLED, "bt878",
++			     IRQF_SHARED, "bt878",
+ 			     (void *) bt);
+ 	if (result == -EINVAL) {
+ 		printk(KERN_ERR "bt878(%d): Bad irq number or handler\n",
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/bt8xx/bttv-driver.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/bt8xx/bttv-driver.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/bt8xx/bttv-driver.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/bt8xx/bttv-driver.c	2015-11-03 15:24:45.000000000 +0200
+@@ -4120,7 +4120,7 @@ static int bttv_probe(struct pci_dev *de
+ 	/* disable irqs, register irq handler */
+ 	btwrite(0, BT848_INT_MASK);
+ 	result = request_irq(btv->c.pci->irq, bttv_irq,
+-	    IRQF_SHARED | IRQF_DISABLED, btv->c.v4l2_dev.name, (void *)btv);
++	    IRQF_SHARED, btv->c.v4l2_dev.name, (void *)btv);
+ 	if (result < 0) {
+ 		pr_err("%d: can't get IRQ %d\n",
+ 		       bttv_num, btv->c.pci->irq);
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/bt8xx/bttv-i2c.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/bt8xx/bttv-i2c.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/bt8xx/bttv-i2c.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/bt8xx/bttv-i2c.c	2015-11-03 15:28:57.000000000 +0200
+@@ -397,8 +397,8 @@ int init_bttv_i2c(struct bttv *btv)
+ 
+ int fini_bttv_i2c(struct bttv *btv)
+ {
+-	if (0 != btv->i2c_rc)
+-		return 0;
++	if (btv->i2c_rc == 0)
++		i2c_del_adapter(&btv->c.i2c_adap);
+ 
+-	return i2c_del_adapter(&btv->c.i2c_adap);
++	return 0;
+ }
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/cx18/cx18-driver.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/cx18/cx18-driver.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/cx18/cx18-driver.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/cx18/cx18-driver.c	2015-11-03 15:17:05.000000000 +0200
+@@ -1031,7 +1031,7 @@ static int cx18_probe(struct pci_dev *pc
+ 
+ 	/* Register IRQ */
+ 	retval = request_irq(cx->pci_dev->irq, cx18_irq_handler,
+-			     IRQF_SHARED | IRQF_DISABLED,
++			     IRQF_SHARED,
+ 			     cx->v4l2_dev.name, (void *)cx);
+ 	if (retval) {
+ 		CX18_ERR("Failed to register irq %d\n", retval);
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/cx23885/cx23885-core.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/cx23885/cx23885-core.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/cx23885/cx23885-core.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/cx23885/cx23885-core.c	2015-11-03 15:19:39.000000000 +0200
+@@ -2132,7 +2132,7 @@ static int cx23885_initdev(struct pci_de
+ 	}
+ 
+ 	err = request_irq(pci_dev->irq, cx23885_irq,
+-			  IRQF_SHARED | IRQF_DISABLED, dev->name, dev);
++			  IRQF_SHARED, dev->name, dev);
+ 	if (err < 0) {
+ 		printk(KERN_ERR "%s: can't get IRQ %d\n",
+ 		       dev->name, pci_dev->irq);
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/cx88/cx88-alsa.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/cx88/cx88-alsa.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/cx88/cx88-alsa.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/cx88/cx88-alsa.c	2015-11-03 15:22:51.000000000 +0200
+@@ -835,7 +835,7 @@ static int snd_cx88_create(struct snd_ca
+ 
+ 	/* get irq */
+ 	err = request_irq(chip->pci->irq, cx8801_irq,
+-			  IRQF_SHARED | IRQF_DISABLED, chip->core->name, chip);
++			  IRQF_SHARED, chip->core->name, chip);
+ 	if (err < 0) {
+ 		dprintk(0, "%s: can't get IRQ %d\n",
+ 		       chip->core->name, chip->pci->irq);
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/cx88/cx88-mpeg.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/cx88/cx88-mpeg.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/cx88/cx88-mpeg.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/cx88/cx88-mpeg.c	2015-11-03 15:23:03.000000000 +0200
+@@ -499,7 +499,7 @@ static int cx8802_init_common(struct cx8
+ 
+ 	/* get irq */
+ 	err = request_irq(dev->pci->irq, cx8802_irq,
+-			  IRQF_SHARED | IRQF_DISABLED, dev->core->name, dev);
++			  IRQF_SHARED, dev->core->name, dev);
+ 	if (err < 0) {
+ 		printk(KERN_ERR "%s: can't get IRQ %d\n",
+ 		       dev->core->name, dev->pci->irq);
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/cx88/cx88-video.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/cx88/cx88-video.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/cx88/cx88-video.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/cx88/cx88-video.c	2015-11-03 15:21:26.000000000 +0200
+@@ -1757,7 +1757,7 @@ static int cx8800_initdev(struct pci_dev
+ 
+ 	/* get irq */
+ 	err = request_irq(pci_dev->irq, cx8800_irq,
+-			  IRQF_SHARED | IRQF_DISABLED, core->name, dev);
++			  IRQF_SHARED, core->name, dev);
+ 	if (err < 0) {
+ 		printk(KERN_ERR "%s/0: can't get IRQ %d\n",
+ 		       core->name,pci_dev->irq);
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/ivtv/ivtv-driver.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/ivtv/ivtv-driver.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/ivtv/ivtv-driver.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/ivtv/ivtv-driver.c	2015-11-03 15:07:59.000000000 +0200
+@@ -1267,7 +1267,7 @@ static int ivtv_probe(struct pci_dev *pd
+ 
+ 	/* Register IRQ */
+ 	retval = request_irq(itv->pdev->irq, ivtv_irq_handler,
+-	     IRQF_SHARED | IRQF_DISABLED, itv->v4l2_dev.name, (void *)itv);
++	     IRQF_SHARED, itv->v4l2_dev.name, (void *)itv);
+ 	if (retval) {
+ 		IVTV_ERR("Failed to register irq %d\n", retval);
+ 		goto free_i2c;
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/saa7134/saa7134-alsa.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/saa7134/saa7134-alsa.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/saa7134/saa7134-alsa.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/saa7134/saa7134-alsa.c	2015-11-03 15:35:22.000000000 +0200
+@@ -1094,7 +1094,7 @@ static int alsa_card_saa7134_create(stru
+ 
+ 
+ 	err = request_irq(dev->pci->irq, saa7134_alsa_irq,
+-				IRQF_SHARED | IRQF_DISABLED, dev->name,
++				IRQF_SHARED, dev->name,
+ 				(void*) &dev->dmasound);
+ 
+ 	if (err < 0) {
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/saa7134/saa7134-core.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/saa7134/saa7134-core.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/saa7134/saa7134-core.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/saa7134/saa7134-core.c	2015-11-03 15:34:16.000000000 +0200
+@@ -991,7 +991,7 @@ static int saa7134_initdev(struct pci_de
+ 
+ 	/* get irq */
+ 	err = request_irq(pci_dev->irq, saa7134_irq,
+-			  IRQF_SHARED | IRQF_DISABLED, dev->name, dev);
++			  IRQF_SHARED, dev->name, dev);
+ 	if (err < 0) {
+ 		printk(KERN_ERR "%s: can't get IRQ %d\n",
+ 		       dev->name,pci_dev->irq);
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/saa7164/saa7164-core.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/saa7164/saa7164-core.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/saa7164/saa7164-core.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/saa7164/saa7164-core.c	2015-11-03 15:36:54.000000000 +0200
+@@ -1226,7 +1226,7 @@ static int saa7164_initdev(struct pci_de
+ 	}
+ 
+ 	err = request_irq(pci_dev->irq, saa7164_irq,
+-		IRQF_SHARED | IRQF_DISABLED, dev->name, dev);
++		IRQF_SHARED, dev->name, dev);
+ 	if (err < 0) {
+ 		printk(KERN_ERR "%s: can't get IRQ %d\n", dev->name,
+ 			pci_dev->irq);
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/ttpci/av7110_ir.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/ttpci/av7110_ir.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/ttpci/av7110_ir.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/ttpci/av7110_ir.c	2015-11-03 15:05:38.000000000 +0200
+@@ -375,7 +375,7 @@ int av7110_ir_init(struct av7110 *av7110
+ 	if (av_cnt == 1) {
+ 		e = proc_create("av7110_ir", S_IWUSR, NULL, &av7110_ir_proc_fops);
+ 		if (e)
+-			e->size = 4 + 256 * sizeof(u16);
++			proc_set_size(e, 4 + 256 * sizeof(u16));
+ 	}
+ 
+ 	tasklet_init(&av7110->ir.ir_tasklet, av7110_emit_key, (unsigned long) &av7110->ir);
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/zoran/zoran_card.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/zoran/zoran_card.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/zoran/zoran_card.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/zoran/zoran_card.c	2015-11-03 15:15:10.000000000 +0200
+@@ -1293,7 +1293,7 @@ static int zoran_probe(struct pci_dev *p
+ 	}
+ 
+ 	result = request_irq(zr->pci_dev->irq, zoran_irq,
+-			     IRQF_SHARED | IRQF_DISABLED, ZR_DEVNAME(zr), zr);
++			     IRQF_SHARED, ZR_DEVNAME(zr), zr);
+ 	if (result < 0) {
+ 		if (result == -EINVAL) {
+ 			dprintk(1,
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/pci/zoran/zoran_procfs.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/zoran/zoran_procfs.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/pci/zoran/zoran_procfs.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/pci/zoran/zoran_procfs.c	2015-11-03 15:14:05.000000000 +0200
+@@ -130,14 +130,14 @@ static int zoran_show(struct seq_file *p
+ 
+ static int zoran_open(struct inode *inode, struct file *file)
+ {
+-	struct zoran *data = PDE(inode)->data;
++	struct zoran *data = PDE_DATA(inode);
+ 	return single_open(file, zoran_show, data);
+ }
+ 
+ static ssize_t zoran_write(struct file *file, const char __user *buffer,
+ 			size_t count, loff_t *ppos)
+ {
+-	struct zoran *zr = PDE(file_inode(file))->data;
++	struct zoran *zr = PDE_DATA(file_inode(file));
+ 	char *string, *sp;
+ 	char *line, *ldelim, *varname, *svar, *tdelim;
+ 
+@@ -201,7 +201,7 @@ zoran_proc_init (struct zoran *zr)
+ 		dprintk(2,
+ 			KERN_INFO
+ 			"%s: procfs entry /proc/%s allocated. data=%p\n",
+-			ZR_DEVNAME(zr), name, zr->zoran_proc->data);
++			ZR_DEVNAME(zr), name, zr);
+ 	} else {
+ 		dprintk(1, KERN_ERR "%s: Unable to initialise /proc/%s\n",
+ 			ZR_DEVNAME(zr), name);
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/platform/soc_camera/sh_mobile_ceu_camera.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/platform/soc_camera/sh_mobile_ceu_camera.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/platform/soc_camera/sh_mobile_ceu_camera.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/platform/soc_camera/sh_mobile_ceu_camera.c	2015-11-03 15:02:40.000000000 +0200
+@@ -2137,7 +2137,7 @@ static int sh_mobile_ceu_probe(struct pl
+ 
+ 	/* request irq */
+ 	err = devm_request_irq(&pdev->dev, pcdev->irq, sh_mobile_ceu_irq,
+-			       IRQF_DISABLED, dev_name(&pdev->dev), pcdev);
++			       0, dev_name(&pdev->dev), pcdev);
+ 	if (err) {
+ 		dev_err(&pdev->dev, "Unable to register CEU interrupt.\n");
+ 		goto exit_release_mem;
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/radio/si4713-i2c.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/radio/si4713-i2c.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/radio/si4713-i2c.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/radio/si4713-i2c.c	2015-11-03 15:39:21.000000000 +0200
+@@ -2035,7 +2035,7 @@ static int si4713_probe(struct i2c_clien
+ 
+ 	if (client->irq) {
+ 		rval = request_irq(client->irq,
+-			si4713_handler, IRQF_TRIGGER_FALLING | IRQF_DISABLED,
++			si4713_handler, IRQF_TRIGGER_FALLING,
+ 			client->name, sdev);
+ 		if (rval < 0) {
+ 			v4l2_err(&sdev->sd, "Could not request IRQ\n");
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/rc/winbond-cir.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/rc/winbond-cir.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/rc/winbond-cir.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/rc/winbond-cir.c	2015-11-03 14:57:09.000000000 +0200
+@@ -1130,7 +1130,7 @@ wbcir_probe(struct pnp_dev *device, cons
+ 	}
+ 
+ 	err = request_irq(data->irq, wbcir_irq_handler,
+-			  IRQF_DISABLED, DRVNAME, device);
++			  0, DRVNAME, device);
+ 	if (err) {
+ 		dev_err(dev, "Failed to claim IRQ %u\n", data->irq);
+ 		err = -EBUSY;
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/misc/altera-stapl/altera.c linux-s2-liplianin-v39.40-patch/linux/drivers/misc/altera-stapl/altera.c
+--- linux-s2-liplianin-v39.40/linux/drivers/misc/altera-stapl/altera.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/misc/altera-stapl/altera.c	2015-11-03 15:44:53.000000000 +0200
+@@ -454,7 +454,7 @@ exit_done:
+ 
+ 				name = &p[str_table + name_id];
+ 
+-				if (strnicmp(aconf->action, name, strlen(name)) == 0) {
++				if (strncasecmp(aconf->action, name, strlen(name)) == 0) {
+ 					action_found = 1;
+ 					current_proc =
+ 						get_unaligned_be32(&p[action_table +
+@@ -2176,7 +2176,7 @@ static int altera_get_note(u8 *p, s32 pr
+ 			key_ptr = &p[note_strings +
+ 					get_unaligned_be32(
+ 					&p[note_table + (8 * i)])];
+-			if ((strnicmp(key, key_ptr, strlen(key_ptr)) == 0) &&
++			if ((strncasecmp(key, key_ptr, strlen(key_ptr)) == 0) &&
+ 						(key != NULL)) {
+ 				status = 0;
+ 

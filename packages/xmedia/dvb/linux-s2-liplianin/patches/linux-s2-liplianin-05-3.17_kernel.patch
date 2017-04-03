@@ -1,0 +1,98 @@
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/dvb-core/dvb_net.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/dvb-core/dvb_net.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/dvb-core/dvb_net.c	2014-07-07 16:52:33.000000000 +0300
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/dvb-core/dvb_net.c	2014-11-01 22:53:35.700596000 +0200
+@@ -1274,7 +1274,12 @@ static int dvb_net_add_if(struct dvb_net
+ 	if ((if_num = get_if(dvbnet)) < 0)
+ 		return -EINVAL;
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)
+ 	net = alloc_netdev(sizeof(struct dvb_net_priv), "dvb", dvb_net_setup);
++#else
++	net = alloc_netdev(sizeof(struct dvb_net_priv), "dvb",
++			   NET_NAME_UNKNOWN, dvb_net_setup);
++#endif
+ 	if (!net)
+ 		return -ENOMEM;
+ 
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/usb/dvb-usb-v2/dvb_usb_core.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/usb/dvb-usb-v2/dvb_usb_core.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/usb/dvb-usb-v2/dvb_usb_core.c	2014-07-07 16:52:33.000000000 +0300
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/usb/dvb-usb-v2/dvb_usb_core.c	2014-11-01 23:20:38.490236000 +0200
+@@ -252,14 +252,14 @@ static int dvb_usbv2_adapter_stream_exit
+ 
+ 	return usb_urb_exitv2(&adap->stream);
+ }
+-
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)
+ static int wait_schedule(void *ptr)
+ {
+ 	schedule();
+ 
+ 	return 0;
+ }
+-
++#endif
+ static int dvb_usb_start_feed(struct dvb_demux_feed *dvbdmxfeed)
+ {
+ 	struct dvb_usb_adapter *adap = dvbdmxfeed->demux->priv;
+@@ -273,9 +273,12 @@ static int dvb_usb_start_feed(struct dvb
+ 			dvbdmxfeed->pid, dvbdmxfeed->index);
+ 
+ 	/* wait init is done */
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)
+ 	wait_on_bit(&adap->state_bits, ADAP_INIT, wait_schedule,
+ 			TASK_UNINTERRUPTIBLE);
+-
++#else
++	wait_on_bit(&adap->state_bits, ADAP_INIT, TASK_UNINTERRUPTIBLE);
++#endif
+ 	if (adap->active_fe == -1)
+ 		return -EINVAL;
+ 
+@@ -399,7 +402,11 @@ static int dvb_usb_stop_feed(struct dvb_
+ 
+ 	/* clear 'streaming' status bit */
+ 	clear_bit(ADAP_STREAMING, &adap->state_bits);
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)
+ 	smp_mb__after_clear_bit();
++#else
++	smp_mb__after_atomic();
++#endif
+ 	wake_up_bit(&adap->state_bits, ADAP_STREAMING);
+ skip_feed_stop:
+ 
+@@ -550,7 +557,11 @@ static int dvb_usb_fe_init(struct dvb_fr
+ err:
+ 	if (!adap->suspend_resume_active) {
+ 		clear_bit(ADAP_INIT, &adap->state_bits);
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)
+ 		smp_mb__after_clear_bit();
++#else
++		smp_mb__after_atomic();
++#endif
+ 		wake_up_bit(&adap->state_bits, ADAP_INIT);
+ 	}
+ 
+@@ -568,7 +579,11 @@ static int dvb_usb_fe_sleep(struct dvb_f
+ 
+ 	if (!adap->suspend_resume_active) {
+ 		set_bit(ADAP_SLEEP, &adap->state_bits);
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)
+ 		wait_on_bit(&adap->state_bits, ADAP_STREAMING, wait_schedule,
++#else
++		wait_on_bit(&adap->state_bits, ADAP_STREAMING,
++#endif
+ 				TASK_UNINTERRUPTIBLE);
+ 	}
+ 
+@@ -591,7 +606,11 @@ err:
+ 	if (!adap->suspend_resume_active) {
+ 		adap->active_fe = -1;
+ 		clear_bit(ADAP_SLEEP, &adap->state_bits);
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,17,0)
+ 		smp_mb__after_clear_bit();
++#else
++		smp_mb__after_atomic();
++#endif
+ 		wake_up_bit(&adap->state_bits, ADAP_SLEEP);
+ 	}
+ 

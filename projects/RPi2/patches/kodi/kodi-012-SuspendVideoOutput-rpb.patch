@@ -1,0 +1,197 @@
+diff -Naurp kodi-15.0-beta2-6e5ede3/system/peripherals.xml kodi-15.0-beta2-6e5ede3-patch/system/peripherals.xml
+--- kodi-15.0-beta2-6e5ede3/system/peripherals.xml	2015-05-10 13:26:05.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/system/peripherals.xml	2015-05-11 18:31:43.000000000 +0300
+@@ -16,7 +16,7 @@
+     <setting key="send_inactive_source" type="bool" value="1" label="36025" order="5" />
+     <setting key="cec_standby_screensaver" type="bool" value="0" label="36009" order="6" />
+     <setting key="cec_wake_screensaver" type="bool" value="1" label="36010" order="7" />
+-    <setting key="standby_pc_on_tv_standby" type="enum" value="13011" label="36029" order="8" lvalues="36028|13005|13011" />
++    <setting key="standby_pc_on_tv_standby" type="enum" value="36028" label="36029" order="8" lvalues="36028|13005|13011" />
+     <setting key="standby_tv_on_pc_standby" type="bool" value="1" label="36026" order="9" />
+     <setting key="use_tv_menu_language" type="bool" value="1" label="36018" order="10" />
+     <setting key="pause_playback_on_deactivate" type="bool" value="1" label="36033" order="11" />
+diff -Naurp kodi-15.0-beta2-6e5ede3/xbmc/linux/RBP.cpp kodi-15.0-beta2-6e5ede3-patch/xbmc/linux/RBP.cpp
+--- kodi-15.0-beta2-6e5ede3/xbmc/linux/RBP.cpp	2015-05-11 18:55:31.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/xbmc/linux/RBP.cpp	2015-05-11 18:34:03.000000000 +0300
+@@ -91,6 +91,9 @@ bool CRBP::Initialize()
+ 
+   InitializeSettings();
+ 
++  // in case xbcm was restarted when suspended
++  ResumeVideoOutput();
++
+   g_OMXImage.Initialize();
+   m_omx_image_init = true;
+   return true;
+diff -Naurp kodi-15.0-beta2-6e5ede3/xbmc/peripherals/devices/PeripheralCecAdapter.cpp kodi-15.0-beta2-6e5ede3-patch/xbmc/peripherals/devices/PeripheralCecAdapter.cpp
+--- kodi-15.0-beta2-6e5ede3/xbmc/peripherals/devices/PeripheralCecAdapter.cpp	2015-05-10 13:25:50.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/xbmc/peripherals/devices/PeripheralCecAdapter.cpp	2015-05-11 18:20:51.000000000 +0300
+@@ -186,12 +186,49 @@ void CPeripheralCecAdapter::Announce(Ann
+   }
+   else if (flag == System && !strcmp(sender, "xbmc") && !strcmp(message, "OnSleep"))
+   {
++#if 1
++  bool bSendStandbyCommands(false);
++  {
++    CSingleLock lock(m_critSection);
++    bSendStandbyCommands = m_iExitCode != EXITCODE_REBOOT &&
++                           m_iExitCode != EXITCODE_RESTARTAPP &&
++                           !m_bDeviceRemoved &&
++                           (!m_bGoingToStandby || GetSettingBool("standby_tv_on_pc_standby")) &&
++                           GetSettingBool("enabled");
++
++    if (m_bGoingToStandby)
++      m_bActiveSourceBeforeStandby = m_cecAdapter->IsLibCECActiveSource();
++  }
++
++  if (bSendStandbyCommands)
++  {
++    if (m_cecAdapter->IsLibCECActiveSource())
++    {
++      if (!m_configuration.powerOffDevices.IsEmpty())
++      {
++        CLog::Log(LOGDEBUG, "%s - sending standby commands", __FUNCTION__);
++        m_standbySent = CDateTime::GetCurrentDateTime();
++        m_cecAdapter->StandbyDevices();
++      }
++      else if (m_configuration.bSendInactiveSource == 1)
++      {
++        CLog::Log(LOGDEBUG, "%s - sending inactive source commands", __FUNCTION__);
++        m_cecAdapter->SetInactiveView();
++      }
++    }
++    else
++    {
++      CLog::Log(LOGDEBUG, "%s - XBMC is not the active source, not sending any standby commands", __FUNCTION__);
++    }
++  }
++#else
+     // this will also power off devices when we're the active source
+     {
+       CSingleLock lock(m_critSection);
+       m_bGoingToStandby = true;
+     }
+     StopThread();
++#endif
+   }
+   else if (flag == System && !strcmp(sender, "xbmc") && !strcmp(message, "OnWake"))
+   {
+diff -Naurp kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.cpp kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.cpp
+--- kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.cpp	2015-05-11 18:55:31.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.cpp	2015-05-11 18:29:32.000000000 +0300
+@@ -20,7 +20,11 @@
+ 
+ #if defined(TARGET_RASPBERRY_PI)
+ 
++#include "system.h"
+ #include "RaspberryPIPowerSyscall.h"
++#if defined(HAS_DBUS)
++#include "LogindUPowerSyscall.h"
++#endif
+ #include "RBP.h"
+ 
+ bool CRaspberryPIPowerSyscall::VirtualSleep()
+@@ -35,4 +39,34 @@ bool CRaspberryPIPowerSyscall::VirtualWa
+   return true;
+ }
+ 
++bool CRaspberryPIPowerSyscall::Powerdown()
++{
++  int s = false;
++#if defined(HAS_DBUS)
++  if (CLogindUPowerSyscall::HasLogind())
++  {
++    IPowerSyscall *m_instance = new CLogindUPowerSyscall;
++    if (m_instance->CanPowerdown())
++      s = m_instance->Powerdown();
++    delete m_instance;
++  }
++#endif
++  return s;
++}
++
++bool CRaspberryPIPowerSyscall::Reboot()
++{
++  int s = false;
++#if defined(HAS_DBUS)
++  if (CLogindUPowerSyscall::HasLogind())
++  {
++    IPowerSyscall *m_instance = new CLogindUPowerSyscall;
++    if (m_instance->CanReboot())
++      s = m_instance->Reboot();
++    delete m_instance;
++  }
++#endif
++  return s;
++}
++
+ #endif
+diff -Naurp kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.h kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.h
+--- kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.h	2015-05-11 18:55:31.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.h	2015-05-11 18:30:30.000000000 +0300
+@@ -31,11 +31,11 @@ public:
+   CRaspberryPIPowerSyscall() : CPowerSyscallVirtualSleep() {}
+   virtual ~CRaspberryPIPowerSyscall() {}
+ 
+-  virtual bool Powerdown()    { return false; }
++  virtual bool Powerdown();
+   virtual bool Hibernate()    { return false; }
+-  virtual bool Reboot()       { return false; }
++  virtual bool Reboot();
+ 
+-  virtual bool CanPowerdown() { return false; }
++  virtual bool CanPowerdown() { return true; }
+   virtual bool CanHibernate() { return false; }
+   virtual bool CanReboot()    { return true; }
+ 
+diff -Naurp kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/PowerManager.cpp kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/PowerManager.cpp
+--- kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/PowerManager.cpp	2015-05-11 18:55:31.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/PowerManager.cpp	2015-05-11 18:23:41.000000000 +0300
+@@ -240,7 +240,7 @@ void CPowerManager::OnSleep()
+   CLog::Log(LOGNOTICE, "%s: Running sleep jobs", __FUNCTION__);
+ 
+   // stop lirc
+-#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
++#if 0 //defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
+   CLog::Log(LOGNOTICE, "%s: Stopping lirc", __FUNCTION__);
+   CBuiltins::Execute("LIRC.Stop");
+ #endif
+@@ -276,7 +276,7 @@ void CPowerManager::OnWake()
+ #endif
+ 
+   // restart lirc
+-#if defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
++#if 0 // defined(HAS_LIRC) || defined(HAS_IRSERVERSUITE)
+   CLog::Log(LOGNOTICE, "%s: Restarting lirc", __FUNCTION__);
+   CBuiltins::Execute("LIRC.Start");
+ #endif
+diff -Naurp kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/PowerSyscallVirtualSleep.cpp kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/PowerSyscallVirtualSleep.cpp
+--- kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/PowerSyscallVirtualSleep.cpp	2015-05-11 18:55:31.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/PowerSyscallVirtualSleep.cpp	2015-05-11 18:27:46.000000000 +0300
+@@ -33,6 +33,11 @@ bool CPowerSyscallVirtualSleep::Suspend(
+       return true;
+     }
+   }
++  else if (VirtualWake())
++  {
++    m_virtualSleepState = VIRTUAL_SLEEP_STATE_WILL_WAKE;
++    return false;
++  }
+ 
+   return false;
+ }
+@@ -62,14 +67,9 @@ bool CPowerSyscallVirtualSleep::ProcessA
+ 
+   // device is in virtual sleep, only one of the power keys will
+   // wake it up again.
+-  if (action.GetID() == ACTION_BUILT_IN_FUNCTION)
+   {
+     std::string name = action.GetName();
+     StringUtils::ToLower(name);
+-    if(name.Equals("xbmc.suspend()") ||
+-       name.Equals("shutdown") ||
+-       name.Equals("suspend")  ||
+-       name.Equals("hibernate"))
+     {
+       if(VirtualWake())
+       {

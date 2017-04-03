@@ -1,0 +1,31 @@
+diff -Naurp vdr-cecremote-54/po/ru_RU.po vdr-cecremote-54-patch/po/ru_RU.po
+--- vdr-cecremote-54/po/ru_RU.po	1970-01-01 03:00:00.000000000 +0300
++++ vdr-cecremote-54-patch/po/ru_RU.po	2015-05-12 11:27:25.000000000 +0300
+@@ -0,0 +1,27 @@
++# CEC-Remote plugin language source file.
++# Copyright (C) 2015 Ulrich Eckhardt <uli-vdr@uli-eckhardt.de>
++# This file is distributed under the same license as the VDR package.
++# Ulrich Eckhardt
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: VDR 2.2.x\n"
++"Report-Msgid-Bugs-To: <see README>\n"
++"POT-Creation-Date: 2015-04-11 14:36+0200\n"
++"PO-Revision-Date: 2013-02-12 13:53+0100\n"
++"Last-Translator: Alexandr Zuyev\n"
++"Language-Team: Russian <alex@alexelec.ru>\n"
++"Language: ru\n"
++"MIME-Version: 1.0\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=utf-8\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++msgid "Show in main menu"
++msgstr "Показывать в главном меню"
++
++msgid "CEC Device"
++msgstr "CEC Устройство"
++
++msgid "Can not open still picture: "
++msgstr "Не удается открыть неподвижное изображение: "

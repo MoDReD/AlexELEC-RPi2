@@ -1,0 +1,16 @@
+[Unit]
+Description=Cloud Yandex.Disk mount
+Requires=network-online.target
+After=network-online.target
+Before=kodi.service vdr.service
+ConditionPathExists=/storage/.cache/services/mnt-yandex.conf
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/cloud-start yandex
+ExecStop=/usr/bin/cloud-stop yandex
+TimeoutStopSec=1s
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

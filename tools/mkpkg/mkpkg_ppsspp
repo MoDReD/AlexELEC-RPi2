@@ -1,0 +1,40 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+echo "getting sources..."
+  if [ ! -d ppsspp.git ]; then
+    git clone https://github.com/libretro/libretro-ppsspp.git -b master ppsspp.git
+    cd ppsspp.git
+    git submodule update --init
+    cd ..
+  fi
+
+  cd ppsspp.git
+    git pull
+    git submodule foreach git pull origin master
+    GIT_REV=`git log -n1 --format=%h`
+  cd ..
+
+echo "copying sources..."
+  rm -rf ppsspp-$GIT_REV
+  cp -R ppsspp.git ppsspp-$GIT_REV
+
+echo "cleaning sources..."
+  rm -rf ppsspp-$GIT_REV/.git
+  rm ppsspp-$GIT_REV/.gitignore
+  rm -rf ppsspp-$GIT_REV/native/.git
+  rm -rf ppsspp-$GIT_REV/pspautotests/.git
+  rm -rf ppsspp-$GIT_REV/lang/.git
+  rm -rf ppsspp-$GIT_REV/ffmpeg/.git
+  rm -rf ppsspp-$GIT_REV/dx9sdk/.git
+  rm -rf ppsspp-$GIT_REV/redist/.git
+  rm -rf ppsspp-$GIT_REV/ext/armips/.git
+
+echo "packing sources..."
+  tar cvJf ppsspp-$GIT_REV.tar.xz ppsspp-$GIT_REV
+
+echo "remove temporary sourcedir..."
+  rm -rf ppsspp-$GIT_REV

@@ -1,0 +1,47 @@
+diff -Naurp kodi-16.1-rc2-a6d8b94/xbmc/Application.cpp kodi-16.1-rc2-a6d8b94-patch/xbmc/Application.cpp
+--- kodi-16.1-rc2-a6d8b94/xbmc/Application.cpp	2016-03-17 12:50:39.000000000 +0200
++++ kodi-16.1-rc2-a6d8b94-patch/xbmc/Application.cpp	2016-03-17 13:02:53.000000000 +0200
+@@ -1086,16 +1086,20 @@ void CApplication::CreateUserDirs()
+ bool CApplication::Initialize()
+ {
+   // start TV backend
+-  std::ifstream isRunVDR, isRunTVH;
++  std::ifstream isRunVDR, isRunTVH, isRunACE;
+   isRunVDR.open("/storage/.cache/services/vdr-backend.conf");
+   isRunTVH.open("/storage/.cache/services/tvheadend.conf");
++  isRunACE.open("/storage/.cache/services/acestream.conf");
+ 
+   if(isRunVDR.good())
+     system("systemctl start vdr-backend.service");
+   if(isRunTVH.good())
+     system("systemctl start tvheadend.service");
++  if(isRunACE.good())
++    system("systemctl start acestream.service");
+   isRunVDR.close();
+   isRunTVH.close();
++  isRunACE.close();
+ 
+ #if defined(HAS_DVD_DRIVE) && !defined(TARGET_WINDOWS) // somehow this throws an "unresolved external symbol" on win32
+   // turn off cdio logging
+@@ -2942,16 +2946,20 @@ void CApplication::Stop(int exitCode)
+   try
+   {
+     // stop TV backend
+-    std::ifstream isRunVDR, isRunTVH;
++    std::ifstream isRunVDR, isRunTVH, isRunACE;
+     isRunVDR.open("/storage/.cache/services/vdr-backend.conf");
+     isRunTVH.open("/storage/.cache/services/tvheadend.conf");
++    isRunACE.open("/storage/.cache/services/acestream.conf");
+ 
+     if(isRunVDR.good())
+       system("systemctl stop vdr-backend.service");
+     if(isRunTVH.good())
+       system("systemctl stop tvheadend.service");
++    if(isRunACE.good())
++      system("systemctl stop acestream.service");
+     isRunVDR.close();
+     isRunTVH.close();
++    isRunACE.close();
+ 
+     CVariant vExitCode(CVariant::VariantTypeObject);
+     vExitCode["exitcode"] = m_ExitCode;

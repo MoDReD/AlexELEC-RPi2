@@ -1,0 +1,19 @@
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/dvb-frontends/cxd2820r_core.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/dvb-frontends/cxd2820r_core.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/dvb-frontends/cxd2820r_core.c	2015-11-03 14:23:04.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/dvb-frontends/cxd2820r_core.c	2015-11-05 15:59:52.000000000 +0200
+@@ -573,12 +573,9 @@ static void cxd2820r_release(struct dvb_
+ 
+ #ifdef CONFIG_GPIOLIB
+ 	/* remove GPIOs */
+-	if (priv->gpio_chip.label) {
+-		ret = gpiochip_remove(&priv->gpio_chip);
+-		if (ret)
+-			dev_err(&priv->i2c->dev, "%s: gpiochip_remove() " \
+-					"failed=%d\n", KBUILD_MODNAME, ret);
+-	}
++	if (priv->gpio_chip.label)
++		gpiochip_remove(&priv->gpio_chip);
++
+ #endif
+ 	kfree(priv);
+ 	return;

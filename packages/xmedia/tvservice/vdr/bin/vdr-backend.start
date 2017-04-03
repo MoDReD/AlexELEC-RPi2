@@ -1,0 +1,80 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+. /etc/profile
+
+LOCK_DIR="/var/lock"
+SERVICE_DIR="/storage/.cache/services"
+VDR_CONFIG_DIR="/storage/.config/vdr"
+
+. $SERVICE_DIR/vdr-backend.conf
+[ -f "$VDR_CONFIG_DIR/vdr-plugins.conf" ] && . $VDR_CONFIG_DIR/vdr-plugins.conf
+[ -f "$SERVICE_DIR/locale.conf" ] && . $SERVICE_DIR/locale.conf
+
+vdr_init() {
+
+  [ "$BVDR_CPU_FREQ" == "1" ] && echo 'performance' > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+
+  mkdir -p /storage/recordings
+  mkdir -p /storage/.cache/vdr
+
+  [ -z "$SYS_LOCALE" ] && SYS_LOCALE="ru_RU.UTF-8"
+  BVDR_ARGS="--no-kbd"
+
+  if [ -d "$BVDR_VIDEO_DIR" ]; then
+       BVDR_ARGS="$BVDR_ARGS --video=\"$BVDR_VIDEO_DIR\""
+  fi
+
+  if [ "$BVDR_DEBUG" == "1" ]; then
+      BVDR_ARGS="$BVDR_ARGS --log=3"
+  else
+      BVDR_ARGS="$BVDR_ARGS --log=1"
+  fi
+
+  [ "$BVDR_DVBAPI" == "1" ] && BVDR_ARGS="$BVDR_ARGS -P 'dvbapi -d'"
+  [ -z "$BVDR_PVR" ] && BVDR_PVR="none"
+  [ "$BVDR_PVR" != "none" ] && BVDR_ARGS="$BVDR_ARGS -P $BVDR_PVR"
+  [ "$BVDR_IPTV" == "1" ] && BVDR_ARGS="$BVDR_ARGS -P 'iptv -d $BVDR_IPTV_DEVICES'"
+  [ "$BVDR_SATIP" == "1" ] && BVDR_ARGS="$BVDR_ARGS -P satip"
+  [ "$BVDR_STREAMDEV_SERVER" == "1" ] && BVDR_ARGS="$BVDR_ARGS -P streamdev-server"
+  [ "$BVDR_STREAMDEV_CLIENT" == "1" ] && BVDR_ARGS="$BVDR_ARGS -P streamdev-client -P epgsync -P svdrpservice"
+  [ "$BVDR_SMARTTVWEB" == "1" ] && BVDR_ARGS="$BVDR_ARGS -P smarttvweb"
+
+  [ -n "$BVDR_PLUGINS" ] && BVDR_ARGS="$BVDR_ARGS $BVDR_PLUGINS"
+
+}
+
+# wicard service start
+if [ -f "$SERVICE_DIR/wicard.conf" ]; then
+  . $SERVICE_DIR/wicard.conf
+  if [ "$WICARD_TYPE" == "TVonly" ]; then
+      if [ -f "$LOCK_DIR/start.wicard" ]; then
+          rm -f $LOCK_DIR/start.wicard
+          systemctl stop wicard.service
+      fi
+      touch $LOCK_DIR/start.wicard
+      systemctl start wicard.service
+  fi
+fi
+
+# oscam service start
+if [ -f "$SERVICE_DIR/oscam.conf" ]; then
+  . $SERVICE_DIR/oscam.conf
+  if [ "$OSCAM_TYPE" == "TVonly" ]; then
+      if [ -f "$LOCK_DIR/start.oscam" ]; then
+          rm -f $LOCK_DIR/start.oscam
+          systemctl stop oscam.service
+      fi
+      touch $LOCK_DIR/start.oscam
+      systemctl start oscam.service
+  fi
+fi
+
+# VDR Backend service start
+vdr_init
+logger -t vdr "VDR Backend start: $BVDR_ARGS"
+touch $LOCK_DIR/start.vdr-backend
+eval LANG=$SYS_LOCALE exec vdr $BVDR_ARGS > /dev/null 2>&1

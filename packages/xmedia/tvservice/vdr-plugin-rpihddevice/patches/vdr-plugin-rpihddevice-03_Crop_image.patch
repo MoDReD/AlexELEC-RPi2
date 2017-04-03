@@ -1,0 +1,110 @@
+diff -Naurp vdr-plugin-rpihddevice-00af2c0/omxdevice.c vdr-plugin-rpihddevice-00af2c0-patch/omxdevice.c
+--- vdr-plugin-rpihddevice-00af2c0/omxdevice.c	2016-06-30 17:25:00.000000000 +0300
++++ vdr-plugin-rpihddevice-00af2c0-patch/omxdevice.c	2016-06-30 16:29:08.000000000 +0300
+@@ -702,6 +702,35 @@ void cOmxDevice::HandleStreamStart()
+ 			format->Interlaced() ? "i" : "p",
+ 			format->pixelWidth, format->pixelHeight);
+ 
++	// stretch the image
++	switch (cRpiSetup::GetVideoFraming())
++	{
++	default:
++	case cVideoFraming::eFrame:
++		m_omx->SetDisplayMode(false, false);
++		break;
++
++	case cVideoFraming::eCut:
++		m_omx->SetDisplayMode(true, false);
++		break;
++
++	case cVideoFraming::eStretch:
++		m_omx->SetDisplayMode(true, true);
++		break;
++
++	case cVideoFraming::eStretchCrop:
++		int dpwidth, dpheight;
++		cRpiDisplay::GetSize(dpwidth, dpheight);
++		if (format->width < 721)
++		{
++			DLOG("video %dx%d stretch the image to %dx%d", format->width, format->height, dpwidth, dpheight + 12);
++			m_omx->SetDisplayRegion(0, -6, dpwidth, dpheight + 6);
++		}
++		else
++			m_omx->SetDisplayRegion(0, 0, dpwidth, dpheight);
++		break;
++	}
++
+ 	HandleVideoSetupChanged();
+ }
+ 
+@@ -720,6 +749,7 @@ void cOmxDevice::HandleVideoSetupChanged
+ 		break;
+ 
+ 	case cVideoFraming::eStretch:
++	case cVideoFraming::eStretchCrop:
+ 		m_omx->SetDisplayMode(true, true);
+ 		break;
+ 	}
+diff -Naurp vdr-plugin-rpihddevice-00af2c0/setup.c vdr-plugin-rpihddevice-00af2c0-patch/setup.c
+--- vdr-plugin-rpihddevice-00af2c0/setup.c	2016-06-30 17:25:00.000000000 +0300
++++ vdr-plugin-rpihddevice-00af2c0-patch/setup.c	2016-06-30 16:30:58.000000000 +0300
+@@ -58,6 +58,7 @@ public:
+ 		m_videoFraming[0] = tr("box");
+ 		m_videoFraming[1] = tr("crop");
+ 		m_videoFraming[2] = tr("stretch");
++		m_videoFraming[3] = tr("stretch & crop");
+ 
+ 		m_videoResolution[0] = tr("default");
+ 		m_videoResolution[1] = tr("follow video");
+@@ -139,7 +140,7 @@ private:
+ 					m_useAdvancedDeinterlacer));
+ 
+ 		Add(new cMenuEditStraItem(
+-				tr("Video Framing"), &m_video.framing, 3, m_videoFraming));
++				tr("Video Framing"), &m_video.framing, 4, m_videoFraming));
+ 
+ 		Add(new cMenuEditStraItem(
+ 				tr("Audio Port"), &m_audio.port, 2, m_audioPort));
+@@ -167,7 +168,7 @@ private:
+ 
+ 	const char *m_audioPort[2];
+ 	const char *m_audioFormat[3];
+-	const char *m_videoFraming[3];
++	const char *m_videoFraming[4];
+ 	const char *m_videoResolution[8];
+ 	const char *m_videoFrameRate[9];
+ 	const char *m_useAdvancedDeinterlacer[3];
+diff -Naurp vdr-plugin-rpihddevice-00af2c0/setup.h vdr-plugin-rpihddevice-00af2c0-patch/setup.h
+--- vdr-plugin-rpihddevice-00af2c0/setup.h	2016-06-30 17:25:00.000000000 +0300
++++ vdr-plugin-rpihddevice-00af2c0-patch/setup.h	2016-06-30 16:31:50.000000000 +0300
+@@ -118,7 +118,8 @@ public:
+ 	static cVideoFraming::eFraming GetVideoFraming(void) {
+ 		return GetInstance()->m_video.framing == 0 ? cVideoFraming::eFrame :
+ 			   GetInstance()->m_video.framing == 1 ? cVideoFraming::eCut :
+-					   cVideoFraming::eStretch;
++			   GetInstance()->m_video.framing == 2 ? cVideoFraming::eStretch :
++					   cVideoFraming::eStretchCrop;
+ 	}
+ 
+ 	static cVideoResolution::eResolution GetVideoResolution(void) {
+diff -Naurp vdr-plugin-rpihddevice-00af2c0/tools.h vdr-plugin-rpihddevice-00af2c0-patch/tools.h
+--- vdr-plugin-rpihddevice-00af2c0/tools.h	2016-06-30 17:14:00.000000000 +0300
++++ vdr-plugin-rpihddevice-00af2c0-patch/tools.h	2016-06-30 16:33:02.000000000 +0300
+@@ -93,13 +93,15 @@ public:
+ 	enum eFraming {
+ 		eFrame,
+ 		eCut,
+-		eStretch
++		eStretch,
++		eStretchCrop
+ 	};
+ 
+ 	static const char* Str(eFraming framing) {
+ 		return  (framing == eFrame)   ? "frame"   :
+ 				(framing == eCut)     ? "cut"     :
+-				(framing == eStretch) ? "stretch" : "unknown";
++				(framing == eStretch) ? "stretch" :
++				(framing == eStretchCrop) ? "stretch & crop" : "unknown";
+ 	}
+ };
+ 

@@ -1,0 +1,511 @@
+diff -Naurp linux-4.0.4/drivers/media/dvb-frontends/rtl2832.c linux-4.0.4-patch/drivers/media/dvb-frontends/rtl2832.c
+--- linux-4.0.4/drivers/media/dvb-frontends/rtl2832.c	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/dvb-frontends/rtl2832.c	2015-05-25 19:04:44.000000000 +0300
+@@ -376,6 +376,10 @@ static int rtl2832_init(struct dvb_front
+ 		len = ARRAY_SIZE(rtl2832_tuner_init_r820t);
+ 		init = rtl2832_tuner_init_r820t;
+ 		break;
++	case RTL2832_TUNER_SI2157:
++		len = ARRAY_SIZE(rtl2832_tuner_init_si2157);
++		init = rtl2832_tuner_init_si2157;
++		break;
+ 	default:
+ 		ret = -EINVAL;
+ 		goto err;
+diff -Naurp linux-4.0.4/drivers/media/dvb-frontends/rtl2832.h linux-4.0.4-patch/drivers/media/dvb-frontends/rtl2832.h
+--- linux-4.0.4/drivers/media/dvb-frontends/rtl2832.h	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/dvb-frontends/rtl2832.h	2015-05-25 19:05:23.000000000 +0300
+@@ -47,6 +47,7 @@ struct rtl2832_platform_data {
+ #define RTL2832_TUNER_FC0013    0x29
+ #define RTL2832_TUNER_R820T     0x2a
+ #define RTL2832_TUNER_R828D     0x2b
++#define RTL2832_TUNER_SI2157    0x2c
+ 	u8 tuner;
+ 
+ 	struct dvb_frontend* (*get_dvb_frontend)(struct i2c_client *);
+diff -Naurp linux-4.0.4/drivers/media/dvb-frontends/rtl2832_priv.h linux-4.0.4-patch/drivers/media/dvb-frontends/rtl2832_priv.h
+--- linux-4.0.4/drivers/media/dvb-frontends/rtl2832_priv.h	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/dvb-frontends/rtl2832_priv.h	2015-05-25 19:10:17.000000000 +0300
+@@ -377,4 +377,29 @@ static const struct rtl2832_reg_value rt
+ 	{DVBT_SPEC_INV,                  0x1},
+ };
+ 
++static const struct rtl2832_reg_value rtl2832_tuner_init_si2157[] = {
++	{DVBT_DAGC_TRG_VAL,             0x39},
++	{DVBT_AGC_TARG_VAL_0,            0x0},
++	{DVBT_AGC_TARG_VAL_8_1,         0x40},
++	{DVBT_AAGC_LOOP_GAIN,           0x16},
++	{DVBT_LOOP_GAIN2_3_0,            0x8},
++	{DVBT_LOOP_GAIN2_4,              0x1},
++	{DVBT_LOOP_GAIN3,               0x18},
++	{DVBT_VTOP1,                    0x35},
++	{DVBT_VTOP2,                    0x21},
++	{DVBT_VTOP3,                    0x21},
++	{DVBT_KRF1,                      0x0},
++	{DVBT_KRF2,                     0x40},
++	{DVBT_KRF3,                     0x10},
++	{DVBT_KRF4,                     0x10},
++	{DVBT_IF_AGC_MIN,               0x80},
++	{DVBT_IF_AGC_MAX,               0x7f},
++	{DVBT_RF_AGC_MIN,               0x80},
++	{DVBT_RF_AGC_MAX,               0x7f},
++	{DVBT_POLAR_RF_AGC,              0x0},
++	{DVBT_POLAR_IF_AGC,              0x0},
++	{DVBT_AD7_SETTING,            0xe9f4},
++	{DVBT_SPEC_INV,                  0x0},
++};
++
+ #endif /* RTL2832_PRIV_H */
+diff -Naurp linux-4.0.4/drivers/media/dvb-frontends/si2168.c linux-4.0.4-patch/drivers/media/dvb-frontends/si2168.c
+--- linux-4.0.4/drivers/media/dvb-frontends/si2168.c	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/dvb-frontends/si2168.c	2015-05-25 20:26:00.000000000 +0300
+@@ -508,6 +508,8 @@ static int si2168_init(struct dvb_fronte
+ 	/* set ts mode */
+ 	memcpy(cmd.args, "\x14\x00\x01\x10\x10\x00", 6);
+ 	cmd.args[4] |= dev->ts_mode;
++	if (dev->ts_clock_gapped)
++		cmd.args[4] |= 0x40;
+ 	cmd.wlen = 6;
+ 	cmd.rlen = 4;
+ 	ret = si2168_cmd_execute(client, &cmd);
+@@ -688,6 +690,7 @@ static int si2168_probe(struct i2c_clien
+ 	*config->fe = &dev->fe;
+ 	dev->ts_mode = config->ts_mode;
+ 	dev->ts_clock_inv = config->ts_clock_inv;
++	dev->ts_clock_gapped = config->ts_clock_gapped;
+ 	dev->fw_loaded = false;
+ 
+ 	i2c_set_clientdata(client, dev);
+diff -Naurp linux-4.0.4/drivers/media/dvb-frontends/si2168.h linux-4.0.4-patch/drivers/media/dvb-frontends/si2168.h
+--- linux-4.0.4/drivers/media/dvb-frontends/si2168.h	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/dvb-frontends/si2168.h	2015-05-25 20:26:53.000000000 +0300
+@@ -42,6 +42,9 @@ struct si2168_config {
+ 
+ 	/* TS clock inverted */
+ 	bool ts_clock_inv;
++
++	/* TS clock gapped */
++	bool ts_clock_gapped;
+ };
+ 
+ #endif
+diff -Naurp linux-4.0.4/drivers/media/dvb-frontends/si2168_priv.h linux-4.0.4-patch/drivers/media/dvb-frontends/si2168_priv.h
+--- linux-4.0.4/drivers/media/dvb-frontends/si2168_priv.h	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/dvb-frontends/si2168_priv.h	2015-05-25 20:27:42.000000000 +0300
+@@ -38,6 +38,7 @@ struct si2168_dev {
+ 	bool fw_loaded;
+ 	u8 ts_mode;
+ 	bool ts_clock_inv;
++	bool ts_clock_gapped;
+ };
+ 
+ /* firmare command struct */
+diff -Naurp linux-4.0.4/drivers/media/pci/cx23885/cx23885-dvb.c linux-4.0.4-patch/drivers/media/pci/cx23885/cx23885-dvb.c
+--- linux-4.0.4/drivers/media/pci/cx23885/cx23885-dvb.c	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/pci/cx23885/cx23885-dvb.c	2015-05-25 21:01:02.000000000 +0300
+@@ -1914,6 +1914,7 @@ static int dvb_register(struct cx23885_t
+ 			/* attach tuner */
+ 			memset(&si2157_config, 0, sizeof(si2157_config));
+ 			si2157_config.fe = fe0->dvb.frontend;
++			si2157_config.if_port = 1;
+ 			memset(&info, 0, sizeof(struct i2c_board_info));
+ 			strlcpy(info.type, "si2157", I2C_NAME_SIZE);
+ 			info.addr = 0x60;
+@@ -1959,6 +1960,7 @@ static int dvb_register(struct cx23885_t
+ 		/* attach tuner */
+ 		memset(&si2157_config, 0, sizeof(si2157_config));
+ 		si2157_config.fe = fe0->dvb.frontend;
++		si2157_config.if_port = 1;
+ 		memset(&info, 0, sizeof(struct i2c_board_info));
+ 		strlcpy(info.type, "si2157", I2C_NAME_SIZE);
+ 		info.addr = 0x60;
+@@ -2097,6 +2099,7 @@ static int dvb_register(struct cx23885_t
+ 		/* attach tuner */
+ 		memset(&si2157_config, 0, sizeof(si2157_config));
+ 		si2157_config.fe = fe0->dvb.frontend;
++		si2157_config.if_port = 1;
+ 		memset(&info, 0, sizeof(struct i2c_board_info));
+ 		strlcpy(info.type, "si2157", I2C_NAME_SIZE);
+ 		info.addr = 0x60;
+@@ -2176,6 +2179,7 @@ static int dvb_register(struct cx23885_t
+ 			/* attach tuner */
+ 			memset(&si2157_config, 0, sizeof(si2157_config));
+ 			si2157_config.fe = fe0->dvb.frontend;
++			si2157_config.if_port = 1;
+ 			memset(&info, 0, sizeof(struct i2c_board_info));
+ 			strlcpy(info.type, "si2157", I2C_NAME_SIZE);
+ 			info.addr = 0x60;
+diff -Naurp linux-4.0.4/drivers/media/pci/smipcie/smipcie.c linux-4.0.4-patch/drivers/media/pci/smipcie/smipcie.c
+--- linux-4.0.4/drivers/media/pci/smipcie/smipcie.c	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/pci/smipcie/smipcie.c	2015-05-25 21:03:57.000000000 +0300
+@@ -659,6 +659,7 @@ static int smi_dvbsky_sit2_fe_attach(str
+ 	/* attach tuner */
+ 	memset(&si2157_config, 0, sizeof(si2157_config));
+ 	si2157_config.fe = port->fe;
++	si2157_config.if_port = 1;
+ 
+ 	memset(&client_info, 0, sizeof(struct i2c_board_info));
+ 	strlcpy(client_info.type, "si2157", I2C_NAME_SIZE);
+diff -Naurp linux-4.0.4/drivers/media/tuners/si2157.c linux-4.0.4-patch/drivers/media/tuners/si2157.c
+--- linux-4.0.4/drivers/media/tuners/si2157.c	2015-05-25 19:58:19.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/tuners/si2157.c	2015-05-25 21:05:42.000000000 +0300
+@@ -298,7 +298,8 @@ static int si2157_set_params(struct dvb_
+ 	if (dev->chiptype == SI2157_CHIPTYPE_SI2146)
+ 		memcpy(cmd.args, "\x14\x00\x02\x07\x00\x01", 6);
+ 	else
+-		memcpy(cmd.args, "\x14\x00\x02\x07\x01\x00", 6);
++		memcpy(cmd.args, "\x14\x00\x02\x07\x00\x00", 6);
++	cmd.args[4] = dev->if_port;
+ 	cmd.wlen = 6;
+ 	cmd.rlen = 4;
+ 	ret = si2157_cmd_execute(client, &cmd);
+@@ -378,6 +379,7 @@ static int si2157_probe(struct i2c_clien
+ 	i2c_set_clientdata(client, dev);
+ 	dev->fe = cfg->fe;
+ 	dev->inversion = cfg->inversion;
++	dev->if_port = cfg->if_port;
+ 	dev->fw_loaded = false;
+ 	dev->chiptype = (u8)id->driver_data;
+ 	dev->if_frequency = 5000000; /* default value of property 0x0706 */
+diff -Naurp linux-4.0.4/drivers/media/tuners/si2157.h linux-4.0.4-patch/drivers/media/tuners/si2157.h
+--- linux-4.0.4/drivers/media/tuners/si2157.h	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/tuners/si2157.h	2015-05-25 21:06:14.000000000 +0300
+@@ -34,6 +34,12 @@ struct si2157_config {
+ 	 * Spectral Inversion
+ 	 */
+ 	bool inversion;
++
++	/*
++	 * Port selection
++	 * Select the RF interface to use (pins 9+11 or 12+13)
++	 */
++	u8 if_port;
+ };
+ 
+ #endif
+diff -Naurp linux-4.0.4/drivers/media/tuners/si2157_priv.h linux-4.0.4-patch/drivers/media/tuners/si2157_priv.h
+--- linux-4.0.4/drivers/media/tuners/si2157_priv.h	2015-05-25 19:58:19.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/tuners/si2157_priv.h	2015-05-25 21:06:47.000000000 +0300
+@@ -28,6 +28,7 @@ struct si2157_dev {
+ 	bool fw_loaded;
+ 	bool inversion;
+ 	u8 chiptype;
++	u8 if_port;
+ 	u32 if_frequency;
+ };
+ 
+diff -Naurp linux-4.0.4/drivers/media/usb/cx231xx/cx231xx-dvb.c linux-4.0.4-patch/drivers/media/usb/cx231xx/cx231xx-dvb.c
+--- linux-4.0.4/drivers/media/usb/cx231xx/cx231xx-dvb.c	2015-05-25 19:58:19.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/usb/cx231xx/cx231xx-dvb.c	2015-05-25 21:07:50.000000000 +0300
+@@ -793,6 +793,7 @@ static int dvb_init(struct cx231xx *dev)
+ 		/* attach tuner */
+ 		memset(&si2157_config, 0, sizeof(si2157_config));
+ 		si2157_config.fe = dev->dvb->frontend;
++		si2157_config.if_port = 1;
+ 		si2157_config.inversion = true;
+ 		strlcpy(info.type, "si2157", I2C_NAME_SIZE);
+ 		info.addr = 0x60;
+@@ -848,6 +849,7 @@ static int dvb_init(struct cx231xx *dev)
+ 		/* attach tuner */
+ 		memset(&si2157_config, 0, sizeof(si2157_config));
+ 		si2157_config.fe = dev->dvb->frontend;
++		si2157_config.if_port = 1;
+ 		si2157_config.inversion = true;
+ 		strlcpy(info.type, "si2157", I2C_NAME_SIZE);
+ 		info.addr = 0x60;
+diff -Naurp linux-4.0.4/drivers/media/usb/dvb-usb/cxusb.c linux-4.0.4-patch/drivers/media/usb/dvb-usb/cxusb.c
+--- linux-4.0.4/drivers/media/usb/dvb-usb/cxusb.c	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/usb/dvb-usb/cxusb.c	2015-05-25 21:10:31.000000000 +0300
+@@ -1350,6 +1350,7 @@ static int cxusb_mygica_t230_frontend_at
+ 	/* attach tuner */
+ 	memset(&si2157_config, 0, sizeof(si2157_config));
+ 	si2157_config.fe = adap->fe_adap[0].fe;
++	si2157_config.if_port = 1;
+ 	memset(&info, 0, sizeof(struct i2c_board_info));
+ 	strlcpy(info.type, "si2157", I2C_NAME_SIZE);
+ 	info.addr = 0x60;
+diff -Naurp linux-4.0.4/drivers/media/usb/dvb-usb-v2/af9035.c linux-4.0.4-patch/drivers/media/usb/dvb-usb-v2/af9035.c
+--- linux-4.0.4/drivers/media/usb/dvb-usb-v2/af9035.c	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/usb/dvb-usb-v2/af9035.c	2015-05-25 21:08:26.000000000 +0300
+@@ -1569,6 +1569,7 @@ static int it930x_tuner_attach(struct dv
+ 
+ 	memset(&si2157_config, 0, sizeof(si2157_config));
+ 	si2157_config.fe = adap->fe[0];
++	si2157_config.if_port = 1;
+ 	ret = af9035_add_i2c_dev(d, "si2157", 0x63,
+ 			&si2157_config, state->i2c_adapter_demod);
+ 
+diff -Naurp linux-4.0.4/drivers/media/usb/dvb-usb-v2/dvbsky.c linux-4.0.4-patch/drivers/media/usb/dvb-usb-v2/dvbsky.c
+--- linux-4.0.4/drivers/media/usb/dvb-usb-v2/dvbsky.c	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/usb/dvb-usb-v2/dvbsky.c	2015-05-25 21:09:15.000000000 +0300
+@@ -553,6 +553,7 @@ static int dvbsky_t680c_attach(struct dv
+ 	/* attach tuner */
+ 	memset(&si2157_config, 0, sizeof(si2157_config));
+ 	si2157_config.fe = adap->fe[0];
++	si2157_config.if_port = 1;
+ 	memset(&info, 0, sizeof(struct i2c_board_info));
+ 	strlcpy(info.type, "si2157", I2C_NAME_SIZE);
+ 	info.addr = 0x60;
+@@ -619,7 +620,8 @@ static int dvbsky_t330_attach(struct dvb
+ 	memset(&si2168_config, 0, sizeof(si2168_config));
+ 	si2168_config.i2c_adapter = &i2c_adapter;
+ 	si2168_config.fe = &adap->fe[0];
+-	si2168_config.ts_mode = SI2168_TS_PARALLEL | 0x40;
++	si2168_config.ts_mode = SI2168_TS_PARALLEL;
++	si2168_config.ts_clock_gapped = true;
+ 	memset(&info, 0, sizeof(struct i2c_board_info));
+ 	strlcpy(info.type, "si2168", I2C_NAME_SIZE);
+ 	info.addr = 0x64;
+@@ -636,6 +638,7 @@ static int dvbsky_t330_attach(struct dvb
+ 	/* attach tuner */
+ 	memset(&si2157_config, 0, sizeof(si2157_config));
+ 	si2157_config.fe = adap->fe[0];
++	si2157_config.if_port = 1;
+ 	memset(&info, 0, sizeof(struct i2c_board_info));
+ 	strlcpy(info.type, "si2157", I2C_NAME_SIZE);
+ 	info.addr = 0x60;
+diff -Naurp linux-4.0.4/drivers/media/usb/dvb-usb-v2/rtl28xxu.c linux-4.0.4-patch/drivers/media/usb/dvb-usb-v2/rtl28xxu.c
+--- linux-4.0.4/drivers/media/usb/dvb-usb-v2/rtl28xxu.c	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/usb/dvb-usb-v2/rtl28xxu.c	2015-05-25 19:40:39.000000000 +0300
+@@ -217,7 +217,7 @@ static int rtl28xxu_i2c_xfer(struct i2c_
+ 				req.data = &msg[0].buf[1];
+ 				ret = rtl28xxu_ctrl_msg(d, &req);
+ 			}
+-		} else if (msg[0].len < 23) {
++		} else if ((msg[0].len < 23) && (!dev->new_i2c_write)) {
+ 			/* method 2 - old I2C */
+ 			req.value = (msg[0].buf[0] << 8) | (msg[0].addr << 1);
+ 			req.index = CMD_I2C_WR;
+@@ -357,6 +357,8 @@ static int rtl2832u_read_config(struct d
+ 	struct rtl28xxu_req req_r828d = {0x0074, CMD_I2C_RD, 1, buf};
+ 	struct rtl28xxu_req req_mn88472 = {0xff38, CMD_I2C_RD, 1, buf};
+ 	struct rtl28xxu_req req_mn88473 = {0xff38, CMD_I2C_RD, 1, buf};
++	struct rtl28xxu_req req_si2157 = {0x00c0, CMD_I2C_RD, 1, buf};
++	struct rtl28xxu_req req_si2168 = {0x00c8, CMD_I2C_RD, 1, buf};
+ 
+ 	dev_dbg(&d->intf->dev, "\n");
+ 
+@@ -477,6 +479,35 @@ static int rtl2832u_read_config(struct d
+ 		goto tuner_found;
+ 	}
+ 
++	/* GPIO0 and GPIO5 to reset Si2157/Si2168 tuner and demod */
++	ret = rtl28xxu_wr_reg_mask(d, SYS_GPIO_OUT_VAL, 0x00, 0x21);
++	if (ret)
++		goto err;
++
++	ret = rtl28xxu_wr_reg_mask(d, SYS_GPIO_OUT_EN, 0x00, 0x21);
++	if (ret)
++		goto err;
++
++	msleep(50);
++
++	ret = rtl28xxu_wr_reg_mask(d, SYS_GPIO_OUT_VAL, 0x21, 0x21);
++	if (ret)
++		goto err;
++
++	ret = rtl28xxu_wr_reg_mask(d, SYS_GPIO_OUT_EN, 0x21, 0x21);
++	if (ret)
++		goto err;
++
++	msleep(50);
++
++	/* check Si2157 ID register; reg=c0 val=80 */
++	ret = rtl28xxu_ctrl_msg(d, &req_si2157);
++	if (ret == 0 && ((buf[0] & 0x80) == 0x80)) {
++		dev->tuner = TUNER_RTL2832_SI2157;
++		dev->tuner_name = "SI2157";
++		goto tuner_found;
++	}
++
+ tuner_found:
+ 	dev_dbg(&d->intf->dev, "tuner=%s\n", dev->tuner_name);
+ 
+@@ -511,6 +542,16 @@ tuner_found:
+ 		}
+ 	}
+ 
++	if (dev->tuner == TUNER_RTL2832_SI2157) {
++		/* check Si2168 ID register; reg=c8 val=80 */
++		ret = rtl28xxu_ctrl_msg(d, &req_si2168);
++		if (ret == 0 && ((buf[0] & 0x80) == 0x80)) {
++			dev_dbg(&d->intf->dev, "Si2168 found\n");
++			dev->slave_demod = SLAVE_DEMOD_SI2168;
++			goto demod_found;
++		}
++	}
++
+ demod_found:
+ 	/* close demod I2C gate */
+ 	ret = rtl28xxu_ctrl_msg(d, &req_gate_close);
+@@ -668,6 +709,11 @@ static const struct rtl2832_platform_dat
+ 	.tuner = TUNER_RTL2832_R820T,
+ };
+ 
++static const struct rtl2832_platform_data rtl2832_si2157_platform_data = {
++	.clk = 28800000,
++	.tuner = TUNER_RTL2832_SI2157,
++};
++
+ static int rtl2832u_fc0012_tuner_callback(struct dvb_usb_device *d,
+ 		int cmd, int arg)
+ {
+@@ -817,6 +863,9 @@ static int rtl2832u_frontend_attach(stru
+ 	case TUNER_RTL2832_R828D:
+ 		*pdata = rtl2832_r820t_platform_data;
+ 		break;
++	case TUNER_RTL2832_SI2157:
++		*pdata = rtl2832_si2157_platform_data;
++		break;
+ 	default:
+ 		dev_err(&d->intf->dev, "unknown tuner %s\n", dev->tuner_name);
+ 		ret = -ENODEV;
+@@ -882,7 +931,7 @@ static int rtl2832u_frontend_attach(stru
+ 			}
+ 
+ 			dev->i2c_client_slave_demod = client;
+-		} else {
++		} else if (dev->slave_demod == SLAVE_DEMOD_MN88473) {
+ 			struct mn88473_config mn88473_config = {};
+ 
+ 			mn88473_config.fe = &adap->fe[1];
+@@ -904,6 +953,35 @@ static int rtl2832u_frontend_attach(stru
+ 			}
+ 
+ 			dev->i2c_client_slave_demod = client;
++		} else {
++			struct si2168_config si2168_config = {};
++			struct i2c_adapter *adapter;
++
++			si2168_config.i2c_adapter = &adapter;
++			si2168_config.fe = &adap->fe[1];
++			si2168_config.ts_mode = SI2168_TS_SERIAL;
++			si2168_config.ts_clock_inv = false;
++			si2168_config.ts_clock_gapped = true;
++			strlcpy(info.type, "si2168", I2C_NAME_SIZE);
++			info.addr = 0x64;
++			info.platform_data = &si2168_config;
++			request_module(info.type);
++			client = i2c_new_device(&d->i2c_adap, &info);
++			if (client == NULL || client->dev.driver == NULL) {
++				dev->slave_demod = SLAVE_DEMOD_NONE;
++				goto err_slave_demod_failed;
++			}
++
++			if (!try_module_get(client->dev.driver->owner)) {
++				i2c_unregister_device(client);
++				dev->slave_demod = SLAVE_DEMOD_NONE;
++				goto err_slave_demod_failed;
++			}
++
++			dev->i2c_client_slave_demod = client;
++
++			/* for Si2168 devices use only new I2C write method */
++			dev->new_i2c_write = true;
+ 		}
+ 	}
+ 
+@@ -1146,6 +1224,39 @@ static int rtl2832u_tuner_attach(struct 
+ 					adap->fe[1]->ops.tuner_ops.get_rf_strength;
+ 		}
+ 		break;
++	case TUNER_RTL2832_SI2157: {
++		struct si2157_config si2157_config = {
++			.fe = adap->fe[0],
++			.if_port = 0,
++			.inversion = false,
++		};
++
++		strlcpy(info.type, "si2157", I2C_NAME_SIZE);
++		info.addr = 0x60;
++		info.platform_data = &si2157_config;
++		request_module(info.type);
++		client = i2c_new_device(&d->i2c_adap, &info);
++		if (client == NULL || client->dev.driver == NULL)
++			break;
++
++		if (!try_module_get(client->dev.driver->owner)) {
++			i2c_unregister_device(client);
++			break;
++		}
++
++		dev->i2c_client_tuner = client;
++		subdev = i2c_get_clientdata(client);
++
++		/* copy tuner ops for 2nd FE as tuner is shared */
++		if (adap->fe[1]) {
++			adap->fe[1]->tuner_priv =
++					adap->fe[0]->tuner_priv;
++			memcpy(&adap->fe[1]->ops.tuner_ops,
++					&adap->fe[0]->ops.tuner_ops,
++					sizeof(struct dvb_tuner_ops));
++			}
++		}
++		break;
+ 	default:
+ 		dev_err(&d->intf->dev, "unknown tuner %d\n", dev->tuner);
+ 	}
+@@ -1758,6 +1869,8 @@ static const struct usb_device_id rtl28x
+ 	/* RTL2832P devices: */
+ 	{ DVB_USB_DEVICE(USB_VID_HANFTEK, 0x0131,
+ 		&rtl28xxu_props, "Astrometa DVB-T2", NULL) },
++	{ DVB_USB_DEVICE(0x5654, 0xca42,
++		&rtl28xxu_props, "GoTView MasterHD 3", NULL) },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(usb, rtl28xxu_id_table);
+diff -Naurp linux-4.0.4/drivers/media/usb/dvb-usb-v2/rtl28xxu.h linux-4.0.4-patch/drivers/media/usb/dvb-usb-v2/rtl28xxu.h
+--- linux-4.0.4/drivers/media/usb/dvb-usb-v2/rtl28xxu.h	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/usb/dvb-usb-v2/rtl28xxu.h	2015-05-25 19:43:13.000000000 +0300
+@@ -41,6 +41,8 @@
+ #include "fc2580.h"
+ #include "tua9001.h"
+ #include "r820t.h"
++#include "si2168.h"
++#include "si2157.h"
+ 
+ /*
+  * USB commands
+@@ -76,6 +78,7 @@ struct rtl28xxu_dev {
+ 	u8 page; /* integrated demod active register page */
+ 	struct i2c_adapter *demod_i2c_adapter;
+ 	bool rc_active;
++	bool new_i2c_write;
+ 	struct i2c_client *i2c_client_demod;
+ 	struct i2c_client *i2c_client_tuner;
+ 	struct i2c_client *i2c_client_slave_demod;
+@@ -83,6 +86,7 @@ struct rtl28xxu_dev {
+ 	#define SLAVE_DEMOD_NONE           0
+ 	#define SLAVE_DEMOD_MN88472        1
+ 	#define SLAVE_DEMOD_MN88473        2
++	#define SLAVE_DEMOD_SI2168         3
+ 	unsigned int slave_demod:2;
+ 	union {
+ 		struct rtl2830_platform_data rtl2830_platform_data;
+@@ -116,6 +120,7 @@ enum rtl28xxu_tuner {
+ 	TUNER_RTL2832_FC0013,
+ 	TUNER_RTL2832_R820T,
+ 	TUNER_RTL2832_R828D,
++	TUNER_RTL2832_SI2157,
+ };
+ 
+ struct rtl28xxu_req {
+diff -Naurp linux-4.0.4/drivers/media/usb/em28xx/em28xx-dvb.c linux-4.0.4-patch/drivers/media/usb/em28xx/em28xx-dvb.c
+--- linux-4.0.4/drivers/media/usb/em28xx/em28xx-dvb.c	2015-05-17 19:55:21.000000000 +0300
++++ linux-4.0.4-patch/drivers/media/usb/em28xx/em28xx-dvb.c	2015-05-25 21:13:13.000000000 +0300
+@@ -1579,6 +1579,7 @@ static int em28xx_dvb_init(struct em28xx
+ 			/* attach tuner */
+ 			memset(&si2157_config, 0, sizeof(si2157_config));
+ 			si2157_config.fe = dvb->fe[0];
++			si2157_config.if_port = 1;
+ 			memset(&info, 0, sizeof(struct i2c_board_info));
+ 			strlcpy(info.type, "si2157", I2C_NAME_SIZE);
+ 			info.addr = 0x60;
+@@ -1639,6 +1640,7 @@ static int em28xx_dvb_init(struct em28xx
+ 			/* attach tuner */
+ 			memset(&si2157_config, 0, sizeof(si2157_config));
+ 			si2157_config.fe = dvb->fe[0];
++			si2157_config.if_port = 0;
+ 			memset(&info, 0, sizeof(struct i2c_board_info));
+ 			strlcpy(info.type, "si2146", I2C_NAME_SIZE);
+ 			info.addr = 0x60;

@@ -1,0 +1,21 @@
+## Sample ##
+
+## device List ##
+
+hid_mapper --list-devices
+
+# alexelec:~ # hid_mapper --list-devices
+# Looking for Manufacturer : (null)
+# Looking for Product : (null)
+# Found HID device at /dev/hidraw2
+# --- Vendor = Mouse
+# --- manufacturer = 1d57, device = ac01
+# Found HID device at /dev/hidraw3
+# --- Vendor = Mouse
+# --- manufacturer = 1d57, device = ac01
+
+## key codes ##
+
+hid_mapper --learn --manufacturer 1d57 --product ac01
+
+##

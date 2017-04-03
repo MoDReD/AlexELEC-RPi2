@@ -1,0 +1,98 @@
+diff -Naurp kodi-16.1-c6f6e0b/xbmc/Application.cpp kodi-16.1-c6f6e0b-patch/xbmc/Application.cpp
+--- kodi-16.1-c6f6e0b/xbmc/Application.cpp	2016-07-09 11:01:03.000000000 +0300
++++ kodi-16.1-c6f6e0b-patch/xbmc/Application.cpp	2016-07-09 10:51:57.000000000 +0300
+@@ -1086,23 +1086,36 @@ void CApplication::CreateUserDirs()
+ bool CApplication::Initialize()
+ {
+   // start TV backend
+-  std::ifstream isRunVDR, isRunTVH, isRunACE, isRunProxy;
+-  isRunVDR.open("/storage/.cache/services/vdr-backend.conf");
+-  isRunTVH.open("/storage/.cache/services/tvheadend.conf");
+-  isRunACE.open("/storage/.cache/services/acestream.conf");
+-  isRunProxy.open("/storage/.cache/services/aceproxy.conf");
++  std::ifstream isRunVDR, isRunTVH, isRunACE, isRunProxy, isAllACE, isAllProxy;
+ 
++  isRunVDR.open("/storage/.cache/services/vdr-backend.conf");
+   if(isRunVDR.good())
+     system("systemctl start vdr-backend.service");
++  isRunVDR.close();
++
++  isRunTVH.open("/storage/.cache/services/tvheadend.conf");
+   if(isRunTVH.good())
+     system("systemctl start tvheadend.service");
+-  if(isRunACE.good())
+-    system("systemctl start acestream.service");
+-  if(isRunProxy.good())
+-    system("systemctl start aceproxy.service");
+-  isRunVDR.close();
+   isRunTVH.close();
++
++  isRunACE.open("/storage/.cache/services/acestream.conf");
++  if(isRunACE.good())
++  {
++    isAllACE.open("/var/lock/acestream.always");
++    if(!isAllACE.good())
++      system("systemctl start acestream.service");
++    isAllACE.close();
++  }
+   isRunACE.close();
++
++  isRunProxy.open("/storage/.cache/services/aceproxy.conf");
++  if(isRunProxy.good())
++  {
++    isAllProxy.open("/var/lock/aceproxy.always");
++    if(!isAllProxy.good())
++      system("systemctl start aceproxy.service");
++    isAllProxy.close();
++  }
+   isRunProxy.close();
+ 
+ #if defined(HAS_DVD_DRIVE) && !defined(TARGET_WINDOWS) // somehow this throws an "unresolved external symbol" on win32
+@@ -2950,24 +2963,37 @@ void CApplication::Stop(int exitCode)
+   try
+   {
+     // stop TV backend
+-    std::ifstream isRunVDR, isRunTVH, isRunACE, isRunProxy;
+-    isRunVDR.open("/storage/.cache/services/vdr-backend.conf");
+-    isRunTVH.open("/storage/.cache/services/tvheadend.conf");
+-    isRunACE.open("/storage/.cache/services/acestream.conf");
+-    isRunProxy.open("/storage/.cache/services/aceproxy.conf");
++    std::ifstream isRunVDR, isRunTVH, isRunACE, isRunProxy, isAllACE, isAllProxy;
+ 
++    isRunVDR.open("/storage/.cache/services/vdr-backend.conf");
+     if(isRunVDR.good())
+       system("systemctl stop vdr-backend.service");
++    isRunVDR.close();
++
++    isRunTVH.open("/storage/.cache/services/tvheadend.conf");
+     if(isRunTVH.good())
+       system("systemctl stop tvheadend.service");
++    isRunTVH.close();
++
++    isRunProxy.open("/storage/.cache/services/aceproxy.conf");
+     if(isRunProxy.good())
+-      system("systemctl stop aceproxy.service");
++    {
++      isAllProxy.open("/var/lock/aceproxy.always");
++      if(!isAllProxy.good())
++        system("systemctl stop aceproxy.service");
++      isAllProxy.close();
++    }
++    isRunProxy.close();
++
++    isRunACE.open("/storage/.cache/services/acestream.conf");
+     if(isRunACE.good())
+-      system("systemctl stop acestream.service");
+-    isRunVDR.close();
+-    isRunTVH.close();
++    {
++      isAllACE.open("/var/lock/acestream.always");
++      if(!isAllACE.good())
++        system("systemctl stop acestream.service");
++      isAllACE.close();
++    }
+     isRunACE.close();
+-    isRunProxy.close();
+ 
+     CVariant vExitCode(CVariant::VariantTypeObject);
+     vExitCode["exitcode"] = m_ExitCode;

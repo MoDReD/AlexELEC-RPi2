@@ -1,0 +1,15 @@
+--- 1/pin.c	2013-10-25 13:08:53.000000000 +0200
++++ 2/pin.c	2013-10-25 13:10:22.000000000 +0200
+@@ -574,7 +574,11 @@
+ 
+    if (isDirectory)
+       res = asprintf(&path, "%s%s%s/%s/%s", 
+-                     VideoDirectory, 
++#if APIVERSNUM > 20101
++                     cVideoDirectory::Name(),
++#else
++		     VideoDirectory,
++#endif
+                      base ? "/" : "",
+                      base ? base : "",
+                      name ? name : "",

@@ -1,0 +1,12 @@
+diff -Naurp vdr-skin-flatplus-6cfbe89/Makefile vdr-skin-flatplus-6cfbe89-patch/Makefile
+--- vdr-skin-flatplus-6cfbe89/Makefile	2015-04-17 08:24:42.772218036 +0300
++++ vdr-skin-flatplus-6cfbe89-patch/Makefile	2015-04-17 07:46:47.000000000 +0300
+@@ -42,7 +42,7 @@ PLGCFG  = $(call PKGCFG,plgcfg)
+ VDRCONFDIR = $(call PKGCFG,configdir)
+ PLGRESDIR = $(call PKGCFG,resdir)/plugins/$(PLUGIN)
+ TMPDIR ?= /tmp
+-SKINFLATPLUS_WIDGETDIR ?= $(LIBDIR)/$(PLUGIN)/widgets
++SKINFLATPLUS_WIDGETDIR = /storage/.config/vdr/plugins/skinflatplus/widgets
+ 
+ ### The compiler options:
+ export CFLAGS   = $(call PKGCFG,cflags)

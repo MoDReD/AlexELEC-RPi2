@@ -1,0 +1,12 @@
+diff -Naurp kodi-16.1-c6f6e0b/system/keymaps/remote.xml kodi-16.1-c6f6e0b-patch/system/keymaps/remote.xml
+--- kodi-16.1-c6f6e0b/system/keymaps/remote.xml	2016-07-04 15:59:44.000000000 +0300
++++ kodi-16.1-c6f6e0b-patch/system/keymaps/remote.xml	2016-07-04 15:04:46.000000000 +0300
+@@ -63,7 +63,7 @@
+       <volumeplus>VolumeUp</volumeplus>
+       <volumeminus>VolumeDown</volumeminus>
+       <mute>Mute</mute>
+-      <power>ShutDown()</power>
++      <power>ActivateWindow(shutdownmenu)</power>
+       <myvideo>ActivateWindow(MyVideos)</myvideo>
+       <mymusic>ActivateWindow(MyMusic)</mymusic>
+       <mypictures>ActivateWindow(MyPictures)</mypictures>

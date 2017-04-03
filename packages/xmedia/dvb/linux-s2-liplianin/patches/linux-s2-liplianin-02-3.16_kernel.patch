@@ -1,0 +1,398 @@
+diff -Naurp linux-s2-liplianin-v39.40/linux/drivers/media/usb/em28xx/em28xx-audio.c linux-s2-liplianin-v39.40-patch/linux/drivers/media/usb/em28xx/em28xx-audio.c
+--- linux-s2-liplianin-v39.40/linux/drivers/media/usb/em28xx/em28xx-audio.c	2014-07-07 16:52:33.000000000 +0300
++++ linux-s2-liplianin-v39.40-patch/linux/drivers/media/usb/em28xx/em28xx-audio.c	2014-08-16 07:55:03.000000000 +0300
+@@ -653,9 +653,13 @@ static int em28xx_audio_init(struct em28
+ 	printk(KERN_INFO "em28xx-audio.c: Copyright (C) 2006 Markus "
+ 			 "Rechberger\n");
+ 	printk(KERN_INFO "em28xx-audio.c: Copyright (C) 2007-2011 Mauro Carvalho Chehab\n");
+-
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	err = snd_card_create(index[devnr], "Em28xx Audio", THIS_MODULE, 0,
+ 			      &card);
++#else
++	err = snd_card_new(&dev->udev->dev, index[devnr], "Em28xx Audio",
++			   THIS_MODULE, 0, &card);
++#endif
+ 	if (err < 0)
+ 		return err;
+ 
+@@ -670,8 +674,9 @@ static int em28xx_audio_init(struct em28
+ 	pcm->info_flags = 0;
+ 	pcm->private_data = dev;
+ 	strcpy(pcm->name, "Empia 28xx Capture");
+-
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	snd_card_set_dev(card, &dev->udev->dev);
++#endif
+ 	strcpy(card->driver, "Em28xx-Audio");
+ 	strcpy(card->shortname, "Em28xx Audio");
+ 	strcpy(card->longname, "Empia Em28xx Audio");
+diff -Naurp linux-s2-liplianin-v39.40/v4l/compat.h linux-s2-liplianin-v39.40-patch/v4l/compat.h
+--- linux-s2-liplianin-v39.40/v4l/compat.h	2014-07-07 16:52:33.000000000 +0300
++++ linux-s2-liplianin-v39.40-patch/v4l/compat.h	2014-08-16 07:58:18.000000000 +0300
+@@ -674,19 +674,6 @@ static inline int usb_endpoint_type(cons
+ 	} while (0)
+ #endif
+ 
+-#ifdef NEED_SND_CARD_CREATE
+-static inline int snd_card_create(int idx, const char *id,
+-			      struct module *module, int extra_size,
+-			      struct snd_card **card)
+-{
+-	*card = snd_card_new(idx, id, module, extra_size);
+-
+-	if (*card == NULL)
+-		return -ENOMEM;
+-	return 0;
+-}
+-#endif
+-
+ /* This macro was added in commit v2.6.23-5792-g34c6538 */
+ #ifndef DMA_BIT_MASK
+ #define DMA_BIT_MASK(n)	(((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
+@@ -727,12 +714,6 @@ static inline unsigned long hrtimer_forw
+ #endif
+ #endif /* _LINUX_HRTIMER_H */
+ 
+-#ifndef PCI_VDEVICE
+-#define PCI_VDEVICE(vendor, device)             \
+-	PCI_VENDOR_ID_##vendor, (device),       \
+-	PCI_ANY_ID, PCI_ANY_ID, 0, 0
+-#endif
+-
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
+ #define __devinitconst
+ #endif
+@@ -890,6 +871,8 @@ static inline int snd_ctl_enum_info(stru
+ 
+ #ifdef NEED_DEV_DBG_RATELIMITED
+ #define dev_dbg_ratelimited dev_dbg
++#define dev_err_ratelimited dev_err
++#define dev_notice_ratelimited dev_notice
+ #endif
+ 
+ #ifdef NEED_MODULE_USB_DRIVER
+@@ -1155,4 +1138,27 @@ static inline struct inode *file_inode(s
+ }
+ #endif
+ 
++#ifdef NEED_SND_CARD_NEW
++#define snd_card_new(p, idx, id, module, extra_size, ret) \
++	snd_card_create(idx, id, module, extra_size, ret)
++#endif
++
++#ifdef NEED_COMPAT_PUT_TIMESPEC
++#define compat_put_timespec put_compat_timespec
++#endif
++
++#ifdef NEED_SMP_MB_AFTER_ATOMIC
++#define smp_mb__after_atomic smp_mb__after_clear_bit
++#endif
++
++#ifdef NEED_DEVM_KMALLOC_ARRAY
++static inline void *devm_kmalloc_array(struct device *dev,
++				       size_t n, size_t size, gfp_t flags)
++{
++	if (size != 0 && n > (~(size_t)0) / size)
++		return NULL;
++	return devm_kmalloc(dev, n * size, flags);
++}
++#endif
++
+ #endif /*  _COMPAT_H */
+diff -Naurp media_build-140601/linux/drivers/media/pci/cx18/cx18-alsa-main.c media_build-140807/linux/drivers/media/pci/cx18/cx18-alsa-main.c
+--- media_build-140601/linux/drivers/media/pci/cx18/cx18-alsa-main.c	2014-03-11 12:08:44.000000000 +0200
++++ media_build-140807/linux/drivers/media/pci/cx18/cx18-alsa-main.c	2014-08-07 11:30:19.000000000 +0300
+@@ -145,6 +145,7 @@ static int snd_cx18_init(struct v4l2_dev
+ 	/* This is a no-op for us.  We'll use the cx->instance */
+ 
+ 	/* (2) Create a card instance */
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	ret = snd_card_create(SNDRV_DEFAULT_IDX1, /* use first available id */
+ 			      SNDRV_DEFAULT_STR1, /* xid from end of shortname*/
+ 			      THIS_MODULE, 0, &sc);
+@@ -153,7 +154,17 @@ static int snd_cx18_init(struct v4l2_dev
+ 			      __func__, ret);
+ 		goto err_exit;
+ 	}
+-
++#else
++	ret = snd_card_new(&cx->pci_dev->dev,
++			   SNDRV_DEFAULT_IDX1, /* use first available id */
++			   SNDRV_DEFAULT_STR1, /* xid from end of shortname*/
++			   THIS_MODULE, 0, &sc);
++	if (ret) {
++		CX18_ALSA_ERR("%s: snd_card_new() failed with err %d\n",
++			      __func__, ret);
++		goto err_exit;
++	}
++#endif
+ 	/* (3) Create a main component */
+ 	ret = snd_cx18_card_create(v4l2_dev, sc, &cxsc);
+ 	if (ret) {
+diff -Naurp media_build-140601/linux/drivers/media/pci/cx23885/cx23885-alsa.c media_build-140807/linux/drivers/media/pci/cx23885/cx23885-alsa.c
+--- media_build-140601/linux/drivers/media/pci/cx23885/cx23885-alsa.c	2014-03-11 12:08:44.000000000 +0200
++++ media_build-140807/linux/drivers/media/pci/cx23885/cx23885-alsa.c	2014-08-07 11:36:43.000000000 +0300
+@@ -488,9 +488,14 @@ struct cx23885_audio_dev *cx23885_audio_
+ 			"for analog TV Audio\n", __func__);
+ 		return NULL;
+ 	}
+-
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	err = snd_card_create(SNDRV_DEFAULT_IDX1, SNDRV_DEFAULT_STR1,
+ 			THIS_MODULE, sizeof(struct cx23885_audio_dev), &card);
++#else
++	err = snd_card_new(&dev->pci->dev,
++			   SNDRV_DEFAULT_IDX1, SNDRV_DEFAULT_STR1,
++			THIS_MODULE, sizeof(struct cx23885_audio_dev), &card);
++#endif
+ 	if (err < 0)
+ 		goto error;
+ 
+@@ -499,9 +504,9 @@ struct cx23885_audio_dev *cx23885_audio_
+ 	chip->pci = dev->pci;
+ 	chip->card = card;
+ 	spin_lock_init(&chip->lock);
+-
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	snd_card_set_dev(card, &dev->pci->dev);
+-
++#endif
+ 	err = snd_cx23885_pcm(chip, 0, "CX23885 Digital");
+ 	if (err < 0)
+ 		goto error;
+diff -Naurp media_build-140601/linux/drivers/media/pci/cx25821/cx25821-alsa.c media_build-140807/linux/drivers/media/pci/cx25821/cx25821-alsa.c
+--- media_build-140601/linux/drivers/media/pci/cx25821/cx25821-alsa.c	2014-04-11 16:46:21.000000000 +0300
++++ media_build-140807/linux/drivers/media/pci/cx25821/cx25821-alsa.c	2014-08-07 12:00:22.000000000 +0300
+@@ -646,8 +646,15 @@ static int cx25821_audio_initdev(struct 
+ 		return -ENOENT;
+ 	}
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	err = snd_card_create(index[devno], id[devno], THIS_MODULE,
+ 			sizeof(struct cx25821_audio_dev), &card);
++
++#else
++	err = snd_card_new(&dev->pci->dev, index[devno], id[devno],
++			   THIS_MODULE,
++			   sizeof(struct cx25821_audio_dev), &card);
++#endif
+ 	if (err < 0) {
+ 		pr_info("DEBUG ERROR: cannot create snd_card_new in %s\n",
+ 			__func__);
+@@ -683,8 +690,9 @@ static int cx25821_audio_initdev(struct 
+ 		goto error;
+ 	}
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	snd_card_set_dev(card, &chip->pci->dev);
+-
++#endif
+ 	strcpy(card->shortname, "cx25821");
+ 	sprintf(card->longname, "%s at 0x%lx irq %d", chip->dev->name,
+ 		chip->iobase, chip->irq);
+diff -Naurp media_build-140601/linux/drivers/media/pci/cx88/cx88-alsa.c media_build-140807/linux/drivers/media/pci/cx88/cx88-alsa.c
+--- media_build-140601/linux/drivers/media/pci/cx88/cx88-alsa.c	2014-03-11 12:08:44.000000000 +0200
++++ media_build-140807/linux/drivers/media/pci/cx88/cx88-alsa.c	2014-08-07 12:33:51.000000000 +0300
+@@ -851,9 +851,9 @@ static int snd_cx88_create(struct snd_ca
+ 
+ 	chip->irq = pci->irq;
+ 	synchronize_irq(chip->irq);
+-
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	snd_card_set_dev(card, &pci->dev);
+-
++#endif
+ 	*rchip = chip;
+ 	*core_ptr = core;
+ 
+@@ -876,8 +876,13 @@ static int cx88_audio_initdev(struct pci
+ 		return (-ENOENT);
+ 	}
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	err = snd_card_create(index[devno], id[devno], THIS_MODULE,
+ 			      sizeof(snd_cx88_card_t), &card);
++#else
++	err = snd_card_new(&pci->dev, index[devno], id[devno], THIS_MODULE,
++			   sizeof(snd_cx88_card_t), &card);
++#endif
+ 	if (err < 0)
+ 		return err;
+ 
+diff -Naurp media_build-140601/linux/drivers/media/pci/ivtv/ivtv-alsa-main.c media_build-140807/linux/drivers/media/pci/ivtv/ivtv-alsa-main.c
+--- media_build-140601/linux/drivers/media/pci/ivtv/ivtv-alsa-main.c	2014-03-11 12:08:44.000000000 +0200
++++ media_build-140807/linux/drivers/media/pci/ivtv/ivtv-alsa-main.c	2014-08-07 11:43:28.000000000 +0300
+@@ -145,6 +145,7 @@ static int snd_ivtv_init(struct v4l2_dev
+ 	/* This is a no-op for us.  We'll use the itv->instance */
+ 
+ 	/* (2) Create a card instance */
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	ret = snd_card_create(SNDRV_DEFAULT_IDX1, /* use first available id */
+ 			      SNDRV_DEFAULT_STR1, /* xid from end of shortname*/
+ 			      THIS_MODULE, 0, &sc);
+@@ -153,7 +154,17 @@ static int snd_ivtv_init(struct v4l2_dev
+ 			      __func__, ret);
+ 		goto err_exit;
+ 	}
+-
++#else
++	ret = snd_card_new(&itv->pdev->dev,
++			   SNDRV_DEFAULT_IDX1, /* use first available id */
++			   SNDRV_DEFAULT_STR1, /* xid from end of shortname*/
++			   THIS_MODULE, 0, &sc);
++	if (ret) {
++		IVTV_ALSA_ERR("%s: snd_card_new() failed with err %d\n",
++			      __func__, ret);
++		goto err_exit;
++	}
++#endif
+ 	/* (3) Create a main component */
+ 	ret = snd_ivtv_card_create(v4l2_dev, sc, &itvsc);
+ 	if (ret) {
+diff -Naurp media_build-140601/linux/drivers/media/pci/saa7134/saa7134-alsa.c media_build-140807/linux/drivers/media/pci/saa7134/saa7134-alsa.c
+--- media_build-140601/linux/drivers/media/pci/saa7134/saa7134-alsa.c	2014-03-11 12:08:44.000000000 +0200
++++ media_build-140807/linux/drivers/media/pci/saa7134/saa7134-alsa.c	2014-08-07 12:35:25.000000000 +0300
+@@ -1072,8 +1072,13 @@ static int alsa_card_saa7134_create(stru
+ 	if (!enable[devnum])
+ 		return -ENODEV;
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	err = snd_card_create(index[devnum], id[devnum], THIS_MODULE,
+ 			      sizeof(snd_card_saa7134_t), &card);
++#else
++	err = snd_card_new(&dev->pci->dev, index[devnum], id[devnum],
++			   THIS_MODULE, sizeof(snd_card_saa7134_t), &card);
++#endif
+ 	if (err < 0)
+ 		return err;
+ 
+@@ -1115,8 +1120,9 @@ static int alsa_card_saa7134_create(stru
+ 	if ((err = snd_card_saa7134_pcm(chip, 0)) < 0)
+ 		goto __nodev;
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	snd_card_set_dev(card, &chip->pci->dev);
+-
++#endif
+ 	/* End of "creation" */
+ 
+ 	strcpy(card->shortname, "SAA7134");
+diff -Naurp media_build-140601/linux/drivers/media/usb/cx231xx/cx231xx-audio.c media_build-140807/linux/drivers/media/usb/cx231xx/cx231xx-audio.c
+--- media_build-140601/linux/drivers/media/usb/cx231xx/cx231xx-audio.c	2014-03-11 12:08:46.000000000 +0200
++++ media_build-140807/linux/drivers/media/usb/cx231xx/cx231xx-audio.c	2014-08-07 11:33:11.000000000 +0300
+@@ -665,8 +665,13 @@ static int cx231xx_audio_init(struct cx2
+ 	cx231xx_info("cx231xx-audio.c: probing for cx231xx "
+ 		     "non standard usbaudio\n");
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	err = snd_card_create(index[devnr], "Cx231xx Audio", THIS_MODULE,
+ 			      0, &card);
++#else
++	err = snd_card_new(&dev->udev->dev, index[devnr], "Cx231xx Audio",
++			   THIS_MODULE, 0, &card);
++#endif
+ 	if (err < 0)
+ 		return err;
+ 
+@@ -682,7 +687,9 @@ static int cx231xx_audio_init(struct cx2
+ 	pcm->info_flags = 0;
+ 	pcm->private_data = dev;
+ 	strcpy(pcm->name, "Conexant cx231xx Capture");
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	snd_card_set_dev(card, &dev->udev->dev);
++#endif
+ 	strcpy(card->driver, "Cx231xx-Audio");
+ 	strcpy(card->shortname, "Cx231xx Audio");
+ 	strcpy(card->longname, "Conexant cx231xx Audio");
+diff -Naurp media_build-140601/linux/drivers/media/usb/stk1160/stk1160-ac97.c media_build-140807/linux/drivers/media/usb/stk1160/stk1160-ac97.c
+--- media_build-140601/linux/drivers/media/usb/stk1160/stk1160-ac97.c	2014-03-11 12:08:48.000000000 +0200
++++ media_build-140807/linux/drivers/media/usb/stk1160/stk1160-ac97.c	2014-08-07 11:49:30.000000000 +0300
+@@ -98,19 +98,25 @@ int stk1160_ac97_register(struct stk1160
+ 	 * Just want a card to access ac96 controls,
+ 	 * the actual capture interface will be handled by snd-usb-audio
+ 	 */
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	rc = snd_card_create(SNDRV_DEFAULT_IDX1, SNDRV_DEFAULT_STR1,
+ 			      THIS_MODULE, 0, &card);
++#else
++	rc = snd_card_new(dev->dev, SNDRV_DEFAULT_IDX1, SNDRV_DEFAULT_STR1,
++			      THIS_MODULE, 0, &card);
++#endif
+ 	if (rc < 0)
+ 		return rc;
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	snd_card_set_dev(card, dev->dev);
+-
++#endif
+ 	/* TODO: I'm not sure where should I get these names :-( */
+ 	snprintf(card->shortname, sizeof(card->shortname),
+ 		 "stk1160-mixer");
+ 	snprintf(card->longname, sizeof(card->longname),
+ 		 "stk1160 ac97 codec mixer control");
+-	strncpy(card->driver, dev->dev->driver->name, sizeof(card->driver));
++	strlcpy(card->driver, dev->dev->driver->name, sizeof(card->driver));
+ 
+ 	rc = snd_ac97_bus(card, 0, &stk1160_ac97_ops, NULL, &ac97_bus);
+ 	if (rc)
+diff -Naurp media_build-140601/linux/drivers/media/usb/tlg2300/pd-alsa.c media_build-140807/linux/drivers/media/usb/tlg2300/pd-alsa.c
+--- media_build-140601/linux/drivers/media/usb/tlg2300/pd-alsa.c	2014-03-11 12:08:48.000000000 +0200
++++ media_build-140807/linux/drivers/media/usb/tlg2300/pd-alsa.c	2014-08-07 11:45:30.000000000 +0300
+@@ -300,7 +300,12 @@ int poseidon_audio_init(struct poseidon 
+ 	struct snd_pcm *pcm;
+ 	int ret;
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	ret = snd_card_create(-1, "Telegent", THIS_MODULE, 0, &card);
++#else
++	ret = snd_card_new(&p->interface->dev, -1, "Telegent",
++			   THIS_MODULE, 0, &card);
++#endif
+ 	if (ret != 0)
+ 		return ret;
+ 
+diff -Naurp media_build-140601/linux/drivers/media/usb/tm6000/tm6000-alsa.c media_build-140807/linux/drivers/media/usb/tm6000/tm6000-alsa.c
+--- media_build-140601/linux/drivers/media/usb/tm6000/tm6000-alsa.c	2014-03-11 12:08:48.000000000 +0200
++++ media_build-140807/linux/drivers/media/usb/tm6000/tm6000-alsa.c	2014-08-07 12:37:16.000000000 +0300
+@@ -431,7 +431,12 @@ static int tm6000_audio_init(struct tm60
+ 	if (!enable[devnr])
+ 		return -ENOENT;
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	rc = snd_card_create(index[devnr], "tm6000", THIS_MODULE, 0, &card);
++#else
++	rc = snd_card_new(&dev->udev->dev, index[devnr], "tm6000",
++			  THIS_MODULE, 0, &card);
++#endif
+ 	if (rc < 0) {
+ 		snd_printk(KERN_ERR "cannot create card instance %d\n", devnr);
+ 		return rc;
+@@ -445,8 +450,9 @@ static int tm6000_audio_init(struct tm60
+ 		le16_to_cpu(dev->udev->descriptor.idVendor),
+ 		le16_to_cpu(dev->udev->descriptor.idProduct));
+ 	snd_component_add(card, component);
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	snd_card_set_dev(card, &dev->udev->dev);
+-
++#endif
+ 	chip = kzalloc(sizeof(struct snd_tm6000_card), GFP_KERNEL);
+ 	if (!chip) {
+ 		rc = -ENOMEM;
+diff -Naurp media_build-140601/linux/sound/pci/bt87x.c media_build-140807/linux/sound/pci/bt87x.c
+--- media_build-140601/linux/sound/pci/bt87x.c	2014-03-11 12:09:24.000000000 +0200
++++ media_build-140807/linux/sound/pci/bt87x.c	2014-08-07 11:47:41.000000000 +0300
+@@ -887,8 +887,12 @@ static int snd_bt87x_probe(struct pci_de
+ 		++dev;
+ 		return -ENOENT;
+ 	}
+-
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0)
+ 	err = snd_card_create(index[dev], id[dev], THIS_MODULE, 0, &card);
++#else
++	err = snd_card_new(&pci->dev, index[dev], id[dev], THIS_MODULE,
++			   0, &card);
++#endif
+ 	if (err < 0)
+ 		return err;
+ 

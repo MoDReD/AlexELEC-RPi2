@@ -1,0 +1,26 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.ru
+#      Copyright (C) 2011-2014 Alexandr Zuyev (alex@alexelec.ru)
+################################################################################
+
+echo "getting sources..."
+  if [ ! -d vdr-skin-flatplus.git ]; then
+    git clone git://projects.vdr-developer.org/skin-flatplus.git vdr-skin-flatplus.git
+  fi
+
+  cd vdr-skin-flatplus.git
+    git pull
+    GIT_REV=`git log -n1 --format=%h`
+  cd ..
+
+echo "copying sources..."
+  rm -rf vdr-skin-flatplus-$GIT_REV
+  cp -R vdr-skin-flatplus.git vdr-skin-flatplus-$GIT_REV
+
+echo "packing sources..."
+  tar cvJf vdr-skin-flatplus-$GIT_REV.tar.xz vdr-skin-flatplus-$GIT_REV
+
+echo "remove temporary sourcedir..."
+#  rm -rf vdr-skin-flatplus-$GIT_REV
+  rm -rf vdr-skin-flatplus.git

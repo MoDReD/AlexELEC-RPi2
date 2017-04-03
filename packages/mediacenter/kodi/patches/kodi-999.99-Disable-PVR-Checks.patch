@@ -1,0 +1,12 @@
+diff --git a/xbmc/addons/AddonManager.cpp b/xbmc/addons/AddonManager.cpp
+index e00db87..82a8c7f 100644
+--- a/xbmc/addons/AddonManager.cpp
++++ b/xbmc/addons/AddonManager.cpp
+@@ -675,6 +675,7 @@ bool CAddonMgr::AddToUpdateBlacklist(const std::string& id)
+ bool CAddonMgr::IsBlacklisted(const std::string& id) const
+ {
+   CSingleLock lock(m_critSection);
++  if (id.substr(0,4) == "pvr.") return true;
+   return m_updateBlacklist.find(id) != m_updateBlacklist.end();
+ }
+ 

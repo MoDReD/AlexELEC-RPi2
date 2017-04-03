@@ -1,0 +1,14 @@
+[Unit]
+Description=MySQL database server
+Before=kodi.service vdr.service
+ConditionPathExists=|/storage/.cache/services/mysqld.conf
+
+[Service]
+ExecStartPre=-/usr/bin/mysqld-bootstrap
+ExecStart=/usr/bin/mysqld_safe
+ExecStartPost=-/usr/bin/mysqld-root-pass-setup
+ExecStop=/usr/bin/mysqladmin shutdown
+ExecReload=/usr/bin/mysqladmin reload
+
+[Install]
+WantedBy=multi-user.target

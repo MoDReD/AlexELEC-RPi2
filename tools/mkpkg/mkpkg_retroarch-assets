@@ -1,0 +1,30 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+echo "getting sources..."
+  if [ ! -d retroarch-assets.git ]; then
+    git clone https://github.com/libretro/retroarch-assets.git retroarch-assets.git
+  fi
+
+  cd retroarch-assets.git
+    git pull
+    GIT_REV=`git log -n1 --format=%h`
+  cd ..
+
+echo "copying sources..."
+  rm -rf retroarch-assets-$GIT_REV
+  cp -R retroarch-assets.git retroarch-assets-$GIT_REV
+
+echo "cleaning sources..."
+  rm -rf retroarch-assets-$GIT_REV/.git
+  rm retroarch-assets-$GIT_REV/.gitignore
+
+echo "packing sources..."
+  tar cvJf retroarch-assets-$GIT_REV.tar.xz retroarch-assets-$GIT_REV
+
+echo "remove temporary sourcedir..."
+  rm -rf retroarch-assets-$GIT_REV
+  rm -rf retroarch-assets.git

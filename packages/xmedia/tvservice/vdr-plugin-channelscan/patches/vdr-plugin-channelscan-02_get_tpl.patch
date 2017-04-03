@@ -1,0 +1,30 @@
+diff -Naurp vdr-plugin-channelscan-0.6.2-mod-9/transponders.c vdr-plugin-channelscan-0.6.2-mod-9-patch/transponders.c
+--- vdr-plugin-channelscan-0.6.2-mod-9/transponders.c	2016-07-03 09:44:02.000000000 +0300
++++ vdr-plugin-channelscan-0.6.2-mod-9-patch/transponders.c	2016-07-17 14:58:47.000000000 +0300
+@@ -1175,7 +1175,7 @@ There may be several addresses, will be
+ 
+ bool cTransponders::GetTpl()
+ {
+-    std::string buffer, out, urlFile;
++    std::string buffer, out, urlFile, delFile;
+     bool result;
+     char tplAddress[200];
+     char *tplFile, *fileType;
+@@ -1193,7 +1193,7 @@ bool cTransponders::GetTpl()
+         {
+             DEBUG_TRANSPONDER(DBGT "----- %s\n",tplAddress);
+ 
+-            buffer = std::string("wget ") + tplAddress + std::string(" -N -P ") + out;
++            buffer = std::string("wget ") + tplAddress + std::string(" -P ") + out;
+             DEBUG_TRANSPONDER(DBGT "---- %s\n",buffer.c_str());
+ 
+             result = SystemExec(buffer.c_str());
+@@ -1232,6 +1232,8 @@ bool cTransponders::GetTpl()
+     if (result)
+         goto fail;
+ 
++    delFile = std::string("rm -f ") + out + tplFile;
++    SystemExec(delFile.c_str());
+     return true;
+ 
+ fail:

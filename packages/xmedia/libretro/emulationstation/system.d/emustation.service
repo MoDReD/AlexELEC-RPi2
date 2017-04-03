@@ -1,0 +1,22 @@
+[Unit]
+Description=EmulationStation emulator frontend
+After=graphical.target tmp-cores.mount tmp-joypads.mount tmp-database.mount tmp-assets.mount
+Requires=graphical.target tmp-cores.mount tmp-joypads.mount tmp-database.mount tmp-assets.mount
+ConditionPathExists=/var/lock/start.games
+
+[Service]
+Environment=DISPLAY=:0.0
+Environment=SDL_AUDIODRIVER=alsa
+Environment=SDL_MOUSE_RELATIVE=0
+Environment=FB_MULTI_BUFFER=2
+Environment=HOME=/storage
+ExecStartPre=/usr/bin/retroarch-config.start
+ExecStart=/usr/bin/emulationstation --no-splash
+KillMode=process
+TimeoutStopSec=3
+Restart=always
+RestartSec=2
+StartLimitInterval=0
+
+[Install]
+WantedBy=kodi.target

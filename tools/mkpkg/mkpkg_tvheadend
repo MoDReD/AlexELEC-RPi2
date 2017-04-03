@@ -1,0 +1,29 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+echo "getting sources..."
+  if [ ! -d tvheadend.git ]; then
+    git clone -b master https://github.com/tvheadend/tvheadend.git tvheadend.git
+  fi
+
+  cd tvheadend.git
+    git pull
+    GIT_REV=`git log -n1 --format=%h`
+  cd ..
+
+echo "copying sources..."
+  rm -rf tvheadend-$GIT_REV
+  cp -R tvheadend.git tvheadend-$GIT_REV
+
+echo "cleaning sources..."
+#  rm -rf tvheadend-$GIT_REV/.git
+
+echo "packing sources..."
+  tar cvJf tvheadend-$GIT_REV.tar.xz tvheadend-$GIT_REV
+
+echo "remove temporary sourcedir..."
+#  rm -rf tvheadend-$GIT_REV
+  rm -rf tvheadend.git

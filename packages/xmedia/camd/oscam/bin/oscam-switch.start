@@ -1,0 +1,19 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.ru
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.ru)
+################################################################################
+
+LOCK_DIR="/var/lock"
+SERVICE_DIR="/storage/.cache/services"
+
+rm -f $LOCK_DIR/start.oscam
+
+if [ -f "$SERVICE_DIR/oscam.conf" ]; then
+  . $SERVICE_DIR/oscam.conf
+
+  if [ "$OSCAM_TYPE" == "Always" ]; then
+      touch $LOCK_DIR/start.oscam
+  fi
+
+fi

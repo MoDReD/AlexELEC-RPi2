@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<advancedsettings>
+  <showexitbutton>true</showexitbutton>
+  <splash>false</splash>
+  <!-- <loglevel hide="false">2</loglevel> -->
+
+  <samba>
+    <clienttimeout>30</clienttimeout>
+  </samba>
+
+  <network>
+    <readbufferfactor>4.0</readbufferfactor>
+  </network>
+
+  <pvr>
+    <minvideocachelevel>5</minvideocachelevel> 
+    <minaudiocachelevel>20</minaudiocachelevel> 
+  </pvr>
+
+  <!-- fix: no IDR frames and no SEI recovery points -->
+  <!-- <omx>
+    <omxdecodestartwithvalidframe>0</omxdecodestartwithvalidframe>
+  </omx> -->
+
+</advancedsettings>

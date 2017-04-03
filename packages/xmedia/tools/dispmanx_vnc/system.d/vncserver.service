@@ -1,0 +1,16 @@
+[Unit]
+Description=Dispmanx VNC Server
+After=graphical.target
+ConditionPathExists=/storage/.cache/services/vnc.conf
+
+[Service]
+EnvironmentFile=-/run/alexelec/vnc.conf
+ExecStartPre=-/usr/bin/vnc-config
+ExecStart=/usr/bin/dispmanx_vncserver $VNC_ARGS
+TimeoutStopSec=1
+Restart=always
+RestartSec=2
+StartLimitInterval=0
+
+[Install]
+WantedBy=kodi.target

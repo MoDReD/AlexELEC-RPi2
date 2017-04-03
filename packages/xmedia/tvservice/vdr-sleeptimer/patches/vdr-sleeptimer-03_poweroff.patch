@@ -1,0 +1,75 @@
+diff -Naurp vdr-sleeptimer-b777501/sleeptimer.c vdr-sleeptimer-b777501-patch/sleeptimer.c
+--- vdr-sleeptimer-b777501/sleeptimer.c	2013-04-23 08:46:11.000000000 +0300
++++ vdr-sleeptimer-b777501-patch/sleeptimer.c	2015-05-05 14:35:26.000000000 +0300
+@@ -10,6 +10,7 @@
+ #include <vdr/interface.h>
+ #include <vdr/device.h>
+ #include <vdr/status.h>
++#include <vdr/shutdown.h>
+ 
+ #if VDRVERSNUM < 10507
+  #include "i18n.h"
+@@ -19,7 +20,7 @@
+  #define COMMANDLENGTH 512
+ #endif
+ 
+-static const char *VERSION        = "0.8.3-201301261156dev";
++static const char *VERSION        = "0.8.3";
+ static const char *DESCRIPTION    = "Sleeptimer for VDR";
+ static const char *MAINMENUENTRY  = tr("Sleeptimer");
+ 
+@@ -29,7 +30,7 @@ int shutdown_time = 0;
+ int shutdown_minutes = 2;
+ bool start_w_default=false;
+ bool do_confirm=false;
+-char command[COMMANDLENGTH] = "/sbin/poweroff";
++char command[COMMANDLENGTH] = "systemctl poweroff";
+ char cli_command[COMMANDLENGTH]="";
+ bool process_red=false;
+ 
+@@ -158,7 +159,7 @@ cPluginSleeptimer::~cPluginSleeptimer()
+ const char *cPluginSleeptimer::CommandLineHelp(void)
+ {
+   // Return a string that describes all known command line options.
+-	return "  -e command   shutdown command (default: /sbin/poweroff)\n";
++	return "  -e command   shutdown command (default: systemctl poweroff)\n";
+ }
+ 
+ bool cPluginSleeptimer::ProcessArgs(int argc, char *argv[])
+@@ -274,7 +275,7 @@ private:
+ 	int setup_start_w_default;
+ 	int setup_do_confirm;
+ 	char setup_command[COMMANDLENGTH];
+-	const char* methods[3];
++	const char* methods[4];
+ public:
+ 	cMenuSetupSleeptimer(void);
+ 	virtual void Store(void);
+@@ -326,11 +327,12 @@ cMenuSetupSleeptimer::cMenuSetupSleeptim
+  methods[0]=tr("Shutdown");
+  methods[1]=tr("Mute");
+  methods[2]=tr("Execute command");
++ methods[3]=tr("Sleep");
+  
+  char* allowed_chars=(char*)" abcdefghijklmnopqrstuvwxyz0123456789-.,#~\\^$[]|()*+?{}/:%@&";
+  
+  Add(new cMenuEditIntItem(tr("Default Timespan [min]"),  &timespan, 2));
+- Add(new cMenuEditStraItem(tr("Action"), &new_method, 3, methods)); 
++ Add(new cMenuEditStraItem(tr("Action"), &new_method, 4, methods)); 
+  
+  cMenuEditStrItem *commanditem;
+  if (cli_command[0]=='\0')
+@@ -421,6 +423,13 @@ void cBackgroundSleeptimer::Action(void)
+      isyslog("plugin-sleeptimer: ERROR while executing \"%s\"!", command);
+    }
+ 
++   if(method == 3) 
++   {
++    isyslog("plugin-sleeptimer: sleep command");
++    system("vcgencmd display_power 0");
++    ShutdownHandler.bSleep = true;
++   }
++
+   } 
+   else //timeout not reached yet
+   {

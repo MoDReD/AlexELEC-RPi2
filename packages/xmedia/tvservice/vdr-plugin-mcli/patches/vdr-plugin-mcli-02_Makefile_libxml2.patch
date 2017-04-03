@@ -1,0 +1,20 @@
+diff -Naurp vdr-plugin-mcli-907338b/Makefile vdr-plugin-mcli-907338b-patch/Makefile
+--- vdr-plugin-mcli-907338b/Makefile	2016-07-01 12:46:14.000000000 +0300
++++ vdr-plugin-mcli-907338b-patch/Makefile	2016-07-01 11:50:12.000000000 +0300
+@@ -45,12 +45,14 @@ SOFILE = libvdr-$(PLUGIN).so
+ 
+ ### Includes and Defines (add further entries here):
+ 
++XMLCONF ?= xml2-config
++
+ ifdef RBMINI
+   XML_INC := -I/usr/arm-linux-gnueabi/include/libxml2
+   XML_LIB := -lxml2
+ else
+-  XML_INC := `xml2-config --cflags`
+-  XML_LIB := `xml2-config --libs`
++  XML_INC := `$(XMLCONF) --cflags`
++  XML_LIB := `$(XMLCONF) --libs`
+ endif
+ 
+ 

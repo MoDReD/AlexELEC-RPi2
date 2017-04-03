@@ -1,0 +1,47 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+SERVICE_DIR="/storage/.cache/services"
+ACEPROXY_DIR="/storage/.config/aceproxy"
+ACEPROXY_CONFDIR="$ACEPROXY_DIR/plugins/config"
+LOGOS_DIR="/storage/logos"
+LOGOS_URL="http://src.alexelec.in.ua/logos/ace-logos.tar.bz2"
+LOCK_DIR="/var/lock"
+
+download_logos () {
+  mkdir -p $LOGOS_DIR
+  rm -f $LOGOS_DIR/ace-logos.tar.bz2
+  wget -c -q -T 5 -P $LOGOS_DIR $LOGOS_URL 2> /dev/null
+  if [ $? == 0 ] ; then
+    tar -jxf $LOGOS_DIR/ace-logos.tar.bz2 -C $LOGOS_DIR
+    rm -f $LOGOS_DIR/ace-logos.tar.bz2
+    touch $LOGOS_DIR/logos.aceproxy
+  fi
+}
+
+[ ! -f "$LOGOS_DIR/logos.aceproxy" ] && download_logos
+[ -f $SERVICE_DIR/aceproxy.conf ] && . $SERVICE_DIR/aceproxy.conf
+
+if [ "$ACEPROXY_ALWAYS" == "1" ]; then
+  touch $LOCK_DIR/aceproxy.always
+else
+  rm -f $LOCK_DIR/aceproxy.always
+fi
+
+[ -z $ACEPROXY_DEBUG ] && ACEPROXY_DEBUG="INFO"
+[ -z $ACEPROXY_LOGIN ] && ACEPROXY_LOGIN="none"
+[ -z $ACEPROXY_PASSW ] && ACEPROXY_PASSW="none"
+
+# Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+rm -f $ACEPROXY_DIR/aceconfig.pyo
+sed -i -e "s/loglevel = logging.*/loglevel = logging\.$ACEPROXY_DEBUG/" $ACEPROXY_DIR/aceconfig.py
+
+# Login and Password
+if [ "$ACEPROXY_LOGIN" != "none" -a "$ACEPROXY_PASSW" != "none" ]; then
+  rm -f $ACEPROXY_CONFDIR/p2pproxy.pyo
+  sed -i -e "s/email =.*/email = \'$ACEPROXY_LOGIN\'/" $ACEPROXY_CONFDIR/p2pproxy.py
+  sed -i -e "s/password =.*/password = \'$ACEPROXY_PASSW\'/" $ACEPROXY_CONFDIR/p2pproxy.py
+fi

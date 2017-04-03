@@ -1,0 +1,35 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+PKG_NAME="pvr.iptvsimple"
+PKG_REPO="https://github.com/rkubera/pvr.iptvsimple.git"
+GIT_RESET="3af61f9793570bb541850e705d95ae63a6f83592"
+
+echo "getting sources..."
+  if [ ! -d $PKG_NAME.git ]; then
+    git clone $PKG_REPO $PKG_NAME.git
+  fi
+
+  cd $PKG_NAME.git
+    git pull
+    git reset --hard $GIT_RESET
+    GIT_REV=`git log -n1 --format=%h`
+    rm -f $PKG_NAME
+  cd ..
+
+echo "copying sources..."
+  rm -rf $PKG_NAME-$GIT_REV
+  cp -R $PKG_NAME.git $PKG_NAME-$GIT_REV
+
+echo "cleaning sources..."
+  rm -rf $PKG_NAME-$GIT_REV/.git
+
+echo "packing sources..."
+  tar cvJf $PKG_NAME-$GIT_REV.tar.xz $PKG_NAME-$GIT_REV
+
+echo "remove temporary sourcedir..."
+  rm -rf $PKG_NAME.git
+# rm -rf $PKG_NAME-$GIT_REV

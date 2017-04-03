@@ -1,0 +1,32 @@
+diff -Naurp kodi-16.0-beta3-097a209/system/keymaps/remote.xml kodi-16.0-beta3-097a209-patch/system/keymaps/remote.xml
+--- kodi-16.0-beta3-097a209/system/keymaps/remote.xml	2015-12-02 09:20:34.000000000 +0200
++++ kodi-16.0-beta3-097a209-patch/system/keymaps/remote.xml	2015-12-04 20:45:22.000000000 +0200
+@@ -68,7 +68,7 @@
+       <display>FullScreen</display>
+       <start>PreviousMenu</start>
+       <record>Record</record>
+-      <eject>EjectTray()</eject>
++      <eject>Suspend()</eject>
+       <volumeplus>VolumeUp</volumeplus>
+       <volumeminus>VolumeDown</volumeminus>
+       <mute>Mute</mute>
+@@ -76,7 +76,7 @@
+       <myvideo>ActivateWindow(MyVideos)</myvideo>
+       <mymusic>ActivateWindow(MyMusic)</mymusic>
+       <mypictures>ActivateWindow(MyPictures)</mypictures>
+-      <mytv>ActivateWindow(Videos,TvShows)</mytv>
++      <mytv>Quit()</mytv>
+       <guide>ActivateWindow(TVGuide)</guide>
+       <livetv>ActivateWindow(TVChannels)</livetv>
+       <liveradio>ActivateWindow(RadioChannels)</liveradio>
+@@ -581,8 +581,8 @@
+   </Favourites>
+   <FullscreenLiveTV>
+     <remote>
+-      <left>StepBack</left>
+-      <right>StepForward</right>
++      <left>Playlist</left>
++      <right>ActivateWindow(pvrosdguide)</right>
+       <up>Up</up>
+       <down>Down</down>
+       <pageplus>ChannelUp</pageplus>

@@ -1,0 +1,419 @@
+diff -Naurp vdr-2.2.0/keys.c vdr-2.2.0-patch/keys.c
+--- vdr-2.2.0/keys.c	2012-12-04 14:52:52.000000000 +0200
++++ vdr-2.2.0-patch/keys.c	2016-03-13 14:46:30.000000000 +0200
+@@ -43,6 +43,8 @@ static tKey keyTable[] = { // "Up" and "
+                     { kNext,          trNOOP("Key$Next")        },
+                     { kPrev,          trNOOP("Key$Prev")        },
+                     { kPower,         trNOOP("Key$Power")       },
++                    { kExit,          trNOOP("Key$Exit")        },
++                    { kSleep,         trNOOP("Key$Sleep")       },
+                     { kChanUp,        trNOOP("Key$Channel+")    },
+                     { kChanDn,        trNOOP("Key$Channel-")    },
+                     { kChanPrev,      trNOOP("Key$PrevChannel") },
+diff -Naurp vdr-2.2.0/keys.h vdr-2.2.0-patch/keys.h
+--- vdr-2.2.0/keys.h	2015-01-27 12:45:18.000000000 +0200
++++ vdr-2.2.0-patch/keys.h	2016-03-13 14:46:30.000000000 +0200
+@@ -37,6 +37,8 @@ enum eKeys { // "Up" and "Down" must be
+              kNext,
+              kPrev,
+              kPower,
++             kExit,
++             kSleep,
+              kChanUp,
+              kChanDn,
+              kChanPrev,
+diff -Naurp vdr-2.2.0/menu.c vdr-2.2.0-patch/menu.c
+--- vdr-2.2.0/menu.c	2016-03-13 14:48:52.000000000 +0200
++++ vdr-2.2.0-patch/menu.c	2016-03-13 15:12:19.000000000 +0200
+@@ -33,6 +33,9 @@
+ #include "transfer.h"
+ #include "videodir.h"
+ 
++#include <fstream>
++#include <algorithm>
++
+ #include "remotetimers.h"
+ 
+ #define MAXWAIT4EPGINFO   3 // seconds
+@@ -2010,6 +2013,42 @@ eOSState cMenuCommands::Execute(void)
+               cmdbuf = cString::sprintf("%s %s", *command, *parameters);
+            const char *cmd = *cmdbuf ? *cmdbuf : *command;
+            dsyslog("executing command '%s'", cmd);
++           if (strcmp(cmd, "exit") == 0)
++           {
++               bool isBackVDR = std::ifstream("/storage/.cache/services/vdr-backend.conf");
++               bool isBackTVH = std::ifstream("/storage/.cache/services/tvheadend.conf");
++               remove("/var/lock/start.vdr");
++               if (!isBackVDR && !isBackTVH && !cPluginManager::GetPlugin("cecremote"))
++               {
++                  cDevice::PrimaryDevice()->ToggleMute();
++                  esyslog("VDR frontend fast stopping...");
++                  system("touch /var/lock/start.kodi");
++                  SystemExec("systemctl start kodi.service", true);
++                  SystemExec("vdr.stop fast", false);
++                  system("touch /var/lock/stop.vdr");
++                  system("touch /var/lock/exit-fast.vdr");
++               }
++               else
++                  esyslog("VDR frontend normal stopping...");
++               ShutdownHandler.Exit(0);
++           }
++           else if (strcmp(cmd, "sysreboot") == 0)
++           {
++               remove("/var/lock/start.vdr");
++               ShutdownHandler.Exit(98);
++           }
++           else if (strcmp(cmd, "syspower") == 0)
++           {
++               remove("/var/lock/start.vdr");
++               ShutdownHandler.Exit(99);
++           }
++           else if (strcmp(cmd, "sleep") == 0)
++           {
++             system("vcgencmd display_power 0");
++             ShutdownHandler.bSleep = true;
++           }
++           else
++           {
+            cPipe p;
+            if (p.Open(cmd, "r")) {
+               int l = 0;
+@@ -2032,6 +2071,7 @@ eOSState cMenuCommands::Execute(void)
+            else
+               esyslog("ERROR: can't open pipe for command '%s'", cmd);
+            Skins.Message(mtStatus, NULL);
++           }
+            if (result)
+               return AddSubMenu(new cMenuText(title, result, fontFix));
+            return osEnd;
+diff -Naurp vdr-2.2.0/po/ru_RU.po vdr-2.2.0-patch/po/ru_RU.po
+--- vdr-2.2.0/po/ru_RU.po	2016-03-13 14:48:51.000000000 +0200
++++ vdr-2.2.0-patch/po/ru_RU.po	2016-03-13 14:46:30.000000000 +0200
+@@ -1537,12 +1537,21 @@ msgstr "Остановить live video?"
+ msgid "Recording started"
+ msgstr "Запись начата"
+ 
+-msgid "VDR will shut down later - press Power to force"
+-msgstr "VDR выключится позже - нажмите Power для ускорения"
++msgid "MediaCenter will shut down later - press Power to force"
++msgstr "Медиацентр выключится позже - нажмите Power для ускорения"
++
++msgid "Switch to KODI will later - press Exit to force"
++msgstr "Переключение в KODI будет позже - нажмите Exit для ускорения"
+ 
+ msgid "Press any key to cancel shutdown"
+ msgstr "Нажмите любую кнопку чтобы отменить выключение."
+ 
++msgid "Press any key to cancel exit"
++msgstr "Нажмите любую кнопку чтобы отменить переключение в Kodi."
++
++msgid "Press any key to cancel Sleep"
++msgstr "Нажмите любую кнопку чтобы отменить переход в сон."
++
+ msgid "Switching primary DVB..."
+ msgstr "Смена основного DVB-устройства..."
+ 
+diff -Naurp vdr-2.2.0/shutdown.c vdr-2.2.0-patch/shutdown.c
+--- vdr-2.2.0/shutdown.c	2013-10-02 12:02:01.000000000 +0300
++++ vdr-2.2.0-patch/shutdown.c	2016-03-13 14:46:30.000000000 +0200
+@@ -86,6 +86,7 @@ cShutdownHandler::cShutdownHandler(void)
+   shutdownCommand = NULL;
+   exitCode = -1;
+   emergencyExitRequested = false;
++  bSleep = false;
+ }
+ 
+ cShutdownHandler::~cShutdownHandler()
+@@ -130,9 +131,10 @@ void cShutdownHandler::SetShutdownComman
+ void cShutdownHandler::CallShutdownCommand(time_t WakeupTime, int Channel, const char *File, bool UserShutdown)
+ {
+   time_t Delta = WakeupTime ? WakeupTime - time(NULL) : 0;
+-  cString cmd = cString::sprintf("%s %ld %ld %d \"%s\" %d", shutdownCommand, WakeupTime, Delta, Channel, *strescape(File, "\\\"$"), UserShutdown);
++  cString cmd = cString::sprintf("PowerOFF: %ld %ld %d \"%s\" %d", WakeupTime, Delta, Channel, *strescape(File, "\\\"$"), UserShutdown);
+   isyslog("executing '%s'", *cmd);
+-  int Status = SystemExec(cmd, true);
++  remove("/var/lock/start.vdr");
++  int Status = SystemExec("systemctl poweroff", true);
+   if (!WIFEXITED(Status) || WEXITSTATUS(Status))
+      esyslog("SystemExec() failed with status %d", Status);
+   else {
+@@ -162,11 +164,6 @@ bool cShutdownHandler::ConfirmShutdown(b
+   if (!Interactive && !cRemote::Enabled())
+      return false;
+ 
+-  if (!shutdownCommand) {
+-     if (Interactive)
+-        Skins.Message(mtError, tr("Can't shutdown - option '-s' not given!"));
+-     return false;
+-     }
+   if (RecordingsHandler.Active()) {
+      if (!Interactive || !Interface->Confirm(tr("Editing - shut down anyway?")))
+         return false;
+diff -Naurp vdr-2.2.0/shutdown.h vdr-2.2.0-patch/shutdown.h
+--- vdr-2.2.0/shutdown.h	2013-02-18 12:35:27.000000000 +0200
++++ vdr-2.2.0-patch/shutdown.h	2016-03-13 14:46:30.000000000 +0200
+@@ -108,6 +108,8 @@ public:
+        ///< Fails if Force = false and a timer is running or within MinEventTimeout.
+        ///< Always calls shutdown on Force = true.
+        ///< Returns true on success.
++  bool bSleep;
++       ///< sleep state.
+   };
+ 
+ extern cShutdownHandler ShutdownHandler;
+diff -Naurp vdr-2.2.0/svdrp.c vdr-2.2.0-patch/svdrp.c
+--- vdr-2.2.0/svdrp.c	2015-01-12 13:16:27.000000000 +0200
++++ vdr-2.2.0-patch/svdrp.c	2016-03-13 14:46:30.000000000 +0200
+@@ -38,6 +38,7 @@
+ #include "timers.h"
+ #include "tools.h"
+ #include "videodir.h"
++#include "shutdown.h"
+ 
+ // --- cSocket ---------------------------------------------------------------
+ 
+@@ -1203,6 +1204,31 @@ void cSVDRP::CmdMESG(const char *Option)
+      Reply(501, "Missing message");
+ }
+ 
++void cSVDRP::CmdSLEP(const char *Option)
++{
++  if (*Option)
++  {
++     if (strcmp(Option, "on") == 0)
++     {
++         system("vcgencmd display_power 0");
++         ShutdownHandler.bSleep = true;
++     }
++     else if (strcasecmp(Option, "off") == 0)
++     {
++         system("vcgencmd display_power 1");
++         ShutdownHandler.bSleep = false;
++     }
++     else
++     {
++        Reply(501, "Unknown option: \"%s\"", Option);
++        return;
++     }
++     Reply(250, "Message queued");
++  }
++  else
++     Reply(501, "Missing message");
++}
++
+ void cSVDRP::CmdMODC(const char *Option)
+ {
+   if (*Option) {
+@@ -1707,6 +1733,7 @@ void cSVDRP::Execute(char *Cmd)
+   else if (CMD("LSTR"))  CmdLSTR(s);
+   else if (CMD("LSTT"))  CmdLSTT(s);
+   else if (CMD("MESG"))  CmdMESG(s);
++  else if (CMD("SLEP"))  CmdSLEP(s);
+   else if (CMD("MODC"))  CmdMODC(s);
+   else if (CMD("MODT"))  CmdMODT(s);
+   else if (CMD("MOVC"))  CmdMOVC(s);
+diff -Naurp vdr-2.2.0/svdrp.h vdr-2.2.0-patch/svdrp.h
+--- vdr-2.2.0/svdrp.h	2013-10-21 10:42:03.000000000 +0300
++++ vdr-2.2.0-patch/svdrp.h	2016-03-13 14:46:30.000000000 +0200
+@@ -68,6 +68,7 @@ private:
+   void CmdLSTR(const char *Option);
+   void CmdLSTT(const char *Option);
+   void CmdMESG(const char *Option);
++  void CmdSLEP(const char *Option);
+   void CmdMODC(const char *Option);
+   void CmdMODT(const char *Option);
+   void CmdMOVC(const char *Option);
+diff -Naurp vdr-2.2.0/vdr.c vdr-2.2.0-patch/vdr.c
+--- vdr-2.2.0/vdr.c	2016-03-13 14:48:52.000000000 +0200
++++ vdr-2.2.0-patch/vdr.c	2016-03-13 15:17:00.000000000 +0200
+@@ -72,12 +72,15 @@
+ #include "videodir.h"
+ #include "status.h"
+ 
++#include <fstream>
++#include <algorithm>
++
+ #define MINCHANNELWAIT        10 // seconds to wait between failed channel switchings
+ #define ACTIVITYTIMEOUT       60 // seconds before starting housekeeping
+ #define SHUTDOWNWAIT         300 // seconds to wait in user prompt before automatic shutdown
+ #define SHUTDOWNRETRY        360 // seconds before trying again to shut down
+-#define SHUTDOWNFORCEPROMPT    5 // seconds to wait in user prompt to allow forcing shutdown
+-#define SHUTDOWNCANCELPROMPT   5 // seconds to wait in user prompt to allow canceling shutdown
++#define SHUTDOWNFORCEPROMPT    3 // seconds to wait in user prompt to allow forcing shutdown
++#define SHUTDOWNCANCELPROMPT   3 // seconds to wait in user prompt to allow canceling shutdown
+ #define RESTARTCANCELPROMPT    5 // seconds to wait in user prompt before restarting on SIGHUP
+ #define MANUALSTART          600 // seconds the next timer must be in the future to assume manual start
+ #define CHANNELSAVEDELTA     120 // seconds before saving channels.conf after automatic modifications
+@@ -1096,7 +1099,65 @@ int main(int argc, char *argv[])
+            // Set user active for MinUserInactivity time in the future:
+            ShutdownHandler.SetUserInactiveTimeout();
+            }
++        // Sleep
++        if (ShutdownHandler.bSleep)
++        {
++          switch (int(key))
++          {
++             case kMenu:
++             case kInfo:
++             case kSchedule:
++             case kChannels:
++             case kTimers:
++             case kRecordings:
++             case kSetup:
++             case kCommands:
++             case kUser0 ... kUser9:
++             case k_Plugin:
++             case kChanUp|k_Repeat:
++             case kChanUp:
++             case kChanDn|k_Repeat:
++             case kChanDn:
++             case kVolUp|k_Repeat:
++             case kVolUp:
++             case kVolDn|k_Repeat:
++             case kVolDn:
++             case kMute:
++             case kAudio:
++             case kSubtitles:
++             case kFastRew:
++             case kPlayPause:
++             case kPause:
++             case kRecord:
++             case kPower:
++             case kExit:
++             case kSleep:
++             case kChanPrev:
++             case k0 ... k9:
++             case kLeft|k_Repeat:
++             case kLeft:
++             case kRight|k_Repeat:
++             case kRight:
++             case kPrev|k_Repeat:
++             case kPrev:
++             case kNext|k_Repeat:
++             case kNext:
++             case kUp|k_Repeat:
++             case kUp:
++             case kDown|k_Repeat:
++             case kDown:
++             case kOk:
++             case kPlay:
++                 key = kNone;
++                 system("vcgencmd display_power 1");
++                 ShutdownHandler.bSleep = false;
++                 break;
++          }
++        }
++        else
++        {
+         // Keys that must work independent of any interactive mode:
++        bool isVDRBack, isTVHBack;
+         switch (int(key)) {
+           // Menu control:
+           case kMenu: {
+@@ -1262,7 +1323,7 @@ int main(int argc, char *argv[])
+                isyslog("Power button pressed");
+                DELETE_MENU;
+                // Check for activity, request power button again if active:
+-               if (!ShutdownHandler.ConfirmShutdown(false) && Skins.Message(mtWarning, tr("VDR will shut down later - press Power to force"), SHUTDOWNFORCEPROMPT) != kPower) {
++               if (!ShutdownHandler.ConfirmShutdown(false) && Skins.Message(mtWarning, tr("MediaCenter will shut down later - press Power to force"), SHUTDOWNFORCEPROMPT) != kPower) {
+                   // Not pressed power - set VDR to be non-interactive and power down later:
+                   ShutdownHandler.SetUserInactive();
+                   break;
+@@ -1278,14 +1339,70 @@ int main(int argc, char *argv[])
+                   // If final question was canceled, continue to be active:
+                   break;
+                // Ok, now call the shutdown script:
++               remove("/var/lock/start.vdr");
+                ShutdownHandler.DoShutdown(true);
+                // Set VDR to be non-interactive and power down again later:
+                ShutdownHandler.SetUserInactive();
+                // Do not attempt to automatically shut down for a while:
+                ShutdownHandler.SetRetry(SHUTDOWNRETRY);
+                break;
++          // Exit to KODI:
++          case kExit:
++               isyslog("Exit button pressed");
++               DELETE_MENU;
++               // Check for activity, request exit button again if active:
++               if (!ShutdownHandler.ConfirmShutdown(false) && Skins.Message(mtWarning, tr("Switch to KODI will later - press Exit to force"), SHUTDOWNFORCEPROMPT) != kExit) {
++                  // Not pressed exit - set VDR to be non-interactive and exit later:
++                  ShutdownHandler.SetUserInactive();
++                  break;
++                  }
++               // No activity or exit button pressed twice - ask for confirmation:
++               if (!ShutdownHandler.ConfirmShutdown(true)) {
++                  // Non-confirmed background activity - set VDR to be non-interactive and power down later:
++                  ShutdownHandler.SetUserInactive();
++                  break;
++                  }
++               // Ask the final question:
++               if (!Interface->Confirm(tr("Press any key to cancel exit"), SHUTDOWNCANCELPROMPT, true))
++                  // If final question was canceled, continue to be active:
++                  break;
++               // Ok, now call the exit script:
++               isVDRBack = std::ifstream("/storage/.cache/services/vdr-backend.conf");
++               isTVHBack = std::ifstream("/storage/.cache/services/tvheadend.conf");
++               remove("/var/lock/start.vdr");
++               if (!isVDRBack && !isTVHBack && !cPluginManager::GetPlugin("cecremote"))
++               {
++                  cDevice::PrimaryDevice()->ToggleMute();
++                  esyslog("VDR frontend fast stopping...");
++                  system("touch /var/lock/start.kodi");
++                  SystemExec("systemctl start kodi.service", true);
++                  SystemExec("vdr.stop fast", false);
++                  system("touch /var/lock/stop.vdr");
++                  system("touch /var/lock/exit-fast.vdr");
++               }
++               else
++                  esyslog("VDR frontend normal stopping...");
++               EXIT(0);
++               // Set VDR to be non-interactive and power down again later:
++               ShutdownHandler.SetUserInactive();
++               // Do not attempt to automatically shut down for a while:
++               ShutdownHandler.SetRetry(SHUTDOWNRETRY);
++               break;
++          // Sleep:
++          case kSleep:
++               isyslog("Sleep button pressed");
++               DELETE_MENU;
++               // Ask sleep question:
++               if (!Interface->Confirm(tr("Press any key to cancel Sleep"), SHUTDOWNCANCELPROMPT, true))
++                  // If final question was canceled, continue to be active:
++                  break;
++               // Ok, now call the sleep script:
++               system("vcgencmd display_power 0");
++               ShutdownHandler.bSleep = true;
++               break;
+           default: break;
+           }
++        }
+         Interact = Menu ? Menu : cControl::Control(); // might have been closed in the mean time
+         if (Interact) {
+            LastInteract = Now;
+@@ -1504,5 +1621,26 @@ Exit:
+      closelog();
+   if (HasStdin)
+      tcsetattr(STDIN_FILENO, TCSANOW, &savedTm);
++
++  // EXIT code
++  bool isFast = std::ifstream("/var/lock/exit-fast.vdr");
++  switch(ShutdownHandler.GetExitCode()) {
++     case 0: // Exit to Kodi
++         if (isFast)
++         {
++            remove("/var/lock/exit-fast.vdr");
++            esyslog("VDR frontend fast exit!!!");
++         }
++         else
++            esyslog("VDR frontend normal exit!!!");
++         break;
++     case 98: // Reboot
++         SystemExec("systemctl reboot", false);
++         break;
++     case 99: // PowerOff
++         SystemExec("systemctl poweroff", false);
++         break;
++    }
++
+   return ShutdownHandler.GetExitCode();
+ }

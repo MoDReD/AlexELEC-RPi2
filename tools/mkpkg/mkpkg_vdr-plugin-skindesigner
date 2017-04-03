@@ -1,0 +1,29 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+echo "getting sources..."
+  if [ ! -d vdr-plugin-skindesigner.git ]; then
+    git clone http://projects.vdr-developer.org/git/vdr-plugin-skindesigner.git vdr-plugin-skindesigner.git
+  fi
+
+  cd vdr-plugin-skindesigner.git
+    git pull
+    GIT_REV=`git log -n1 --format=%h`
+  cd ..
+
+echo "copying sources..."
+  rm -rf vdr-plugin-skindesigner-$GIT_REV
+  cp -R vdr-plugin-skindesigner.git vdr-plugin-skindesigner-$GIT_REV
+
+echo "cleaning sources..."
+  rm -rf vdr-plugin-skindesigner-$GIT_REV/.git
+
+echo "packing sources..."
+  tar cvJf vdr-plugin-skindesigner-$GIT_REV.tar.xz vdr-plugin-skindesigner-$GIT_REV
+
+echo "remove temporary sourcedir..."
+#  rm -rf vdr-plugin-skindesigner-$GIT_REV
+  rm -rf vdr-plugin-skindesigner.git

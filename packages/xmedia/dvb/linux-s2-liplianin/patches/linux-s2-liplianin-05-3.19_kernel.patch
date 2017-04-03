@@ -1,0 +1,21 @@
+diff -Naurp linux-s2-liplianin-v39.40/linux/sound/pci/bt87x.c linux-s2-liplianin-v39.40-patch/linux/sound/pci/bt87x.c
+--- linux-s2-liplianin-v39.40/linux/sound/pci/bt87x.c	2015-02-16 09:39:57.000000000 +0200
++++ linux-s2-liplianin-v39.40-patch/linux/sound/pci/bt87x.c	2015-02-16 09:46:48.000000000 +0200
+@@ -435,7 +435,7 @@ static int snd_bt87x_pcm_open(struct snd
+ 
+ _error:
+ 	clear_bit(0, &chip->opened);
+-	smp_mb__after_clear_bit();
++	smp_mb__after_atomic();
+ 	return err;
+ }
+ 
+@@ -450,7 +450,7 @@ static int snd_bt87x_close(struct snd_pc
+ 
+ 	chip->substream = NULL;
+ 	clear_bit(0, &chip->opened);
+-	smp_mb__after_clear_bit();
++	smp_mb__after_atomic();
+ 	return 0;
+ }
+ 

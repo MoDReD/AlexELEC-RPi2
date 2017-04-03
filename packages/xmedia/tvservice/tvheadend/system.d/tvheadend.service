@@ -1,0 +1,15 @@
+[Unit]
+Description=Tvheadend
+ConditionPathExists=/storage/.cache/services/tvheadend.conf
+
+[Service]
+ExecStart=/bin/sh -c 'exec /usr/bin/tvheadend.start'
+ExecStop=/bin/kill -TERM $MAINPID
+ExecStopPost=/bin/sh -c 'exec /usr/bin/tvheadend.stop'
+TimeoutStopSec=5
+Restart=always
+RestartSec=2
+StartLimitInterval=0
+
+[Install]
+WantedBy=kodi.target

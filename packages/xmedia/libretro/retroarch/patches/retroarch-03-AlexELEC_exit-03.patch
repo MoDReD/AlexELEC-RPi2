@@ -1,0 +1,13 @@
+diff -Naurp retroarch-5d70242/command.c retroarch-5d70242-patch/command.c
+--- retroarch-5d70242/command.c	2016-07-04 13:50:37.000000000 +0300
++++ retroarch-5d70242-patch/command.c	2016-07-04 13:53:22.000000000 +0300
+@@ -1905,6 +1905,9 @@ bool command_event(enum event_command cm
+       case CMD_EVENT_QUIT:
+          command_event(CMD_EVENT_AUTOSAVE_STATE, NULL);
+          command_event(CMD_EVENT_DISABLE_OVERRIDES, NULL);
++         remove("/var/lock/start.retro");
++         system("touch /var/lock/start.games");
++         system("systemctl start emustation.service");
+ 
+          switch (cmd)
+          {

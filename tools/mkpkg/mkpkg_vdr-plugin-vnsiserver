@@ -1,0 +1,29 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.ru
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.ru)
+################################################################################
+
+echo "getting sources..."
+  if [ ! -d vdr-plugin-vnsiserver.git ]; then
+    git clone git://github.com/FernetMenta/vdr-plugin-vnsiserver vdr-plugin-vnsiserver.git
+  fi
+
+  cd vdr-plugin-vnsiserver.git
+    git pull
+    GIT_REV=`git log -n1 --format=%h`
+  cd ..
+
+echo "copying sources..."
+  rm -rf vdr-plugin-vnsiserver-$GIT_REV
+  cp -R vdr-plugin-vnsiserver.git vdr-plugin-vnsiserver-$GIT_REV
+
+echo "cleaning sources..."
+  rm -rf vdr-plugin-vnsiserver-$GIT_REV/.git
+
+echo "packing sources..."
+  tar cvJf vdr-plugin-vnsiserver-$GIT_REV.tar.xz vdr-plugin-vnsiserver-$GIT_REV
+
+echo "remove temporary sourcedir..."
+#  rm -rf vdr-plugin-vnsiserver-$GIT_REV
+  rm -rf vdr-plugin-vnsiserver.git

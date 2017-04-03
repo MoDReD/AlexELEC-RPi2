@@ -1,0 +1,13 @@
+[Unit]
+Description=Assets directory RetroArch
+Before=retroarch.service
+ConditionPathExists=/var/lock/start.games
+
+[Mount]
+What=none
+Where=/tmp/assets
+Type=overlay
+Options=lowerdir=/usr/share/retroarch-assets,upperdir=/storage/retroarch/assets,workdir=/storage/.tmp/assets-workdir
+
+[Install]
+WantedBy=kodi.target

@@ -1,0 +1,71 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+RUN_ARG=$1
+RUN_DIR="/run/alexelec"
+SERVICE_DIR="/storage/.cache/services"
+PASS_FILE="/storage/.config/davfs2/secrets"
+
+online_stat () {
+  /usr/sbin/connmand-wait-online --timeout=30
+  for i in $(seq 1 30) ; do
+      ping -4 -c 1 -W 1 $1 > /dev/null 2>&1
+      [ $? -eq 0 ] && break
+      usleep 1000000
+  done 
+}
+
+if [ -f "$SERVICE_DIR/mnt-yandex.conf" -a "$1" == "yandex" ]; then
+  . $SERVICE_DIR/mnt-yandex.conf
+  mkdir -p $MOUNT_YANDEX
+
+  cat $PASS_FILE | grep "webdav.yandex.ru" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+      sed -e "s|^.*webdav\.yandex\.ru.*$|\"https:\/\/webdav\.yandex\.ru\"    \"$USER_YANDEX\"    \"$PASS_YANDEX\"|g" -i $PASS_FILE
+  else
+      echo "\"https://webdav.yandex.ru\"    \"$USER_YANDEX\"    \"$PASS_YANDEX\"" >> $PASS_FILE
+  fi
+
+  /bin/mount | grep -x ".* $MOUNT_YANDEX .*" > /dev/null 2>&1
+  [ $? -eq 0 ] && /bin/umount $MOUNT_YANDEX
+
+  online_stat webdav.yandex.ru
+  /usr/sbin/mount.davfs https://webdav.yandex.ru $MOUNT_YANDEX
+
+  /bin/mount | grep -x ".* $MOUNT_YANDEX .*" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+      cp -f $SERVICE_DIR/mnt-yandex.conf $RUN_DIR/mnt-yandex.conf
+      logger -t webdaw "Cloud disk Yandex mount: OK"
+  else
+      rm -f $RUN_DIR/mnt-yandex.conf
+  fi
+fi
+
+if [ -f "$SERVICE_DIR/mnt-box.conf" -a "$1" == "box" ]; then
+  . $SERVICE_DIR/mnt-box.conf
+  mkdir -p $MOUNT_BOX
+
+  cat $PASS_FILE | grep "dav.box.com" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+      sed -e "s|^.*dav\.box\.com.*$|\"https:\/\/dav\.box\.com\/dav\"    \"$USER_BOX\"    \"$PASS_BOX\"|g" -i $PASS_FILE
+  else
+      echo "\"https://dav.box.com/dav\"    \"$USER_BOX\"    \"$PASS_BOX\"" >> $PASS_FILE
+  fi
+
+  /bin/mount | grep -x ".* $MOUNT_BOX .*" > /dev/null 2>&1
+  [ $? -eq 0 ] && /bin/umount $MOUNT_BOX
+
+  online_stat dav.box.com
+  /usr/sbin/mount.davfs https://dav.box.com/dav $MOUNT_BOX
+
+  /bin/mount | grep -x ".* $MOUNT_BOX .*" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+      cp -f $SERVICE_DIR/mnt-box.conf $RUN_DIR/mnt-box.conf
+      logger -t webdaw "Cloud disk Box.com mount: OK"
+  else
+      rm -f $RUN_DIR/mnt-box.conf
+  fi
+fi

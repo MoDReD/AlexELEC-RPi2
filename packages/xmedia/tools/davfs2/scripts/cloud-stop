@@ -1,0 +1,30 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+RUN_ARG=$1
+RUN_DIR="/run/alexelec"
+
+if [ -f "$RUN_DIR/mnt-yandex.conf" -a "$1" == "yandex" ]; then
+  . $RUN_DIR/mnt-yandex.conf
+
+  /bin/mount | grep -x ".* $MOUNT_YANDEX .*" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+      /bin/umount $MOUNT_YANDEX
+      logger -t webdaw "Cloud disk Yandex Umount: OK"
+  fi
+  rm -f $RUN_DIR/mnt-yandex.conf
+fi
+
+if [ -f "$RUN_DIR/mnt-box.conf" -a "$1" == "box" ]; then
+  . $RUN_DIR/mnt-box.conf
+
+  /bin/mount | grep -x ".* $MOUNT_BOX .*" > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+      /bin/umount $MOUNT_BOX
+      logger -t webdaw "Cloud disk Box.com Umount: OK"
+  fi
+  rm -f $RUN_DIR/mnt-box.conf
+fi

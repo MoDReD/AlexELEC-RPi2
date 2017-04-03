@@ -1,0 +1,26 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+echo "getting sources..."
+  if [ ! -d vdr-plugin-tvguideng.git ]; then
+    git clone git://projects.vdr-developer.org/vdr-plugin-tvguideng.git vdr-plugin-tvguideng.git
+  fi
+
+  cd vdr-plugin-tvguideng.git
+    git pull
+    GIT_REV=`git log -n1 --format=%h`
+  cd ..
+
+echo "copying sources..."
+  rm -rf vdr-plugin-tvguideng-$GIT_REV
+  cp -R vdr-plugin-tvguideng.git vdr-plugin-tvguideng-$GIT_REV
+
+echo "packing sources..."
+  tar cvJf vdr-plugin-tvguideng-$GIT_REV.tar.xz vdr-plugin-tvguideng-$GIT_REV
+
+echo "remove temporary sourcedir..."
+#  rm -rf vdr-plugin-tvguideng-$GIT_REV
+  rm -rf vdr-plugin-tvguideng.git

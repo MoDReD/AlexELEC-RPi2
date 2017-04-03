@@ -1,0 +1,34 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+. /etc/profile
+
+SERVICE_DIR="/storage/.cache/services"
+. $SERVICE_DIR/vnc.conf
+
+[ -z "$VNC_PORT" ] && VNC_PORT="5900"
+[ -z "$VNC_SCREEN" ] && VNC_SCREEN="0"
+[ -z "$VNC_FRATE" ] && VNC_FRATE="15"
+
+VNC_ARGS="-p $VNC_PORT -s $VNC_SCREEN -t $VNC_FRATE"
+
+[ -z "$VNC_PWD" ] && VNC_PWD="none"
+if [ "$VNC_PWD" != "none" ]; then
+  VNC_ARGS="$VNC_ARGS -P $VNC_PWD "
+fi
+
+if [ "$VNC_RELATIVE" == "1" ]; then
+  VNC_ARGS="$VNC_ARGS -r"
+else
+  VNC_ARGS="$VNC_ARGS -a"
+fi
+
+[ "$VNC_UNSAFE" == "1" ] && VNC_ARGS="$VNC_ARGS -u"
+[ "$VNC_FULLSCR" == "1" ] && VNC_ARGS="$VNC_ARGS -f"
+[ "$VNC_MULTI" == "1" ] && VNC_ARGS="$VNC_ARGS -m"
+[ "$VNC_DSCALE" == "1" ] && VNC_ARGS="$VNC_ARGS -d"
+
+echo "VNC_ARGS=\"$VNC_ARGS\"" > /run/alexelec/vnc.conf

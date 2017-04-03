@@ -1,0 +1,431 @@
+diff -Naurp kodi-15.0-beta2-6e5ede3/xbmc/input/InputManager.cpp kodi-15.0-beta2-6e5ede3-patch/xbmc/input/InputManager.cpp
+--- kodi-15.0-beta2-6e5ede3/xbmc/input/InputManager.cpp	2015-05-10 13:25:50.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/xbmc/input/InputManager.cpp	2015-05-11 17:22:24.000000000 +0300
+@@ -30,6 +30,7 @@
+ #include "guilib/GUIWindow.h"
+ #include "guilib/GUIWindowManager.h"
+ #include "guilib/GUIMessage.h"
++#include "powermanagement/PowerManager.h"
+ 
+ #ifdef HAS_EVENT_SERVER
+ #include "network/EventServer.h"
+@@ -530,6 +531,13 @@ bool CInputManager::OnKey(const CKey& ke
+   // special handling if the screensaver is active
+   CAction action = CButtonTranslator::GetInstance().GetAction(iWin, key);
+ 
++  // give the PowerManager a chance to process a keypress, and
++  // suppress further processing. we need this for virtual sleep.
++  if (g_powerManager.ProcessAction(action))
++  {
++    return true;
++  }
++
+   // a key has been pressed.
+   // reset Idle Timer
+   g_application.ResetSystemIdleTimer();
+diff -Naurp kodi-15.0-beta2-6e5ede3/xbmc/linux/RBP.cpp kodi-15.0-beta2-6e5ede3-patch/xbmc/linux/RBP.cpp
+--- kodi-15.0-beta2-6e5ede3/xbmc/linux/RBP.cpp	2015-05-11 18:06:24.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/xbmc/linux/RBP.cpp	2015-05-11 17:15:13.000000000 +0300
+@@ -238,5 +238,18 @@ double CRBP::AdjustHDMIClock(double adju
+   return new_adjust;
+ }
+ 
++void CRBP::SuspendVideoOutput()
++{
++  CLog::Log(LOGDEBUG, "Raspberry PI suspending video output\n");
++  char response[80];
++  m_DllBcmHost->vc_gencmd(response, sizeof response, "display_power 0");
++}
++
++void CRBP::ResumeVideoOutput()
++{
++  char response[80];
++  m_DllBcmHost->vc_gencmd(response, sizeof response, "display_power 1");
++  CLog::Log(LOGDEBUG, "Raspberry PI resuming video output\n");
++}
+ 
+ #endif
+diff -Naurp kodi-15.0-beta2-6e5ede3/xbmc/linux/RBP.h kodi-15.0-beta2-6e5ede3-patch/xbmc/linux/RBP.h
+--- kodi-15.0-beta2-6e5ede3/xbmc/linux/RBP.h	2015-05-11 18:06:24.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/xbmc/linux/RBP.h	2015-05-11 17:16:03.000000000 +0300
+@@ -66,6 +66,9 @@ public:
+   void WaitVsync();
+   double AdjustHDMIClock(double adjust);
+ 
++  void SuspendVideoOutput();
++  void ResumeVideoOutput();
++
+ private:
+   DllBcmHost *m_DllBcmHost;
+   bool       m_initialized;
+diff -Naurp kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/IPowerSyscall.h kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/IPowerSyscall.h
+--- kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/IPowerSyscall.h	2015-05-10 13:25:50.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/IPowerSyscall.h	2015-05-11 17:24:10.000000000 +0300
+@@ -20,6 +20,9 @@
+  *
+  */
+ 
++// forward declaration
++class CAction;
++
+ class IPowerEventsCallback
+ {
+ public:
+@@ -63,6 +63,10 @@ public:
+    */
+   virtual bool PumpPowerEvents(IPowerEventsCallback *callback) = 0;
+ 
++  // this is an optional part of the interface, so we provide a no-op implementation here.
++  // return true to suppress further processing of the CAction.
++  virtual bool ProcessAction(const CAction& action) { return false; }
++
+   static const int MAX_COUNT_POWER_FEATURES = 4;
+ };
+ 
+diff -Naurp kodi-15.0-beta2-658e700/xbmc/powermanagement/Makefile kodi-15.0-beta2-658e700-patch/xbmc/powermanagement/Makefile
+--- kodi-15.0-beta2-658e700/xbmc/powermanagement/Makefile	2015-06-10 12:05:25.000000000 +0300
++++ kodi-15.0-beta2-658e700-patch/xbmc/powermanagement/Makefile	2015-06-14 10:03:04.000000000 +0300
+@@ -1,5 +1,6 @@
+ SRCS=DPMSSupport.cpp \
+      PowerManager.cpp \
++     PowerSyscallVirtualSleep.cpp \
+      IPowerSyscall.cpp \
+ 
+ LIB=powermanagement.a
+ 
+diff -Naurp kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/PowerManager.cpp kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/PowerManager.cpp
+--- kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/PowerManager.cpp	2015-05-10 13:25:50.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/PowerManager.cpp	2015-05-11 17:25:10.000000000 +0300
+@@ -225,6 +225,11 @@ void CPowerManager::ProcessEvents()
+   nesting--;
+ }
+ 
++bool CPowerManager::ProcessAction(const CAction& action)
++{
++  return m_instance->ProcessAction(action);
++}
++
+ void CPowerManager::OnSleep()
+ {
+   CAnnouncementManager::Get().Announce(System, "xbmc", "OnSleep");
+diff -Naurp kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/PowerManager.h kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/PowerManager.h
+--- kodi-15.0-beta2-6e5ede3/xbmc/powermanagement/PowerManager.h	2015-05-10 13:25:50.000000000 +0300
++++ kodi-15.0-beta2-6e5ede3-patch/xbmc/powermanagement/PowerManager.h	2015-05-11 17:26:18.000000000 +0300
+@@ -58,6 +58,8 @@ public:
+ 
+ 
+   virtual bool PumpPowerEvents(IPowerEventsCallback *callback) { return false; }
++
++  virtual bool ProcessAction(const CAction& action) { return false; }
+ };
+ 
+ // This class will wrap and handle PowerSyscalls.
+@@ -87,6 +89,7 @@ public:
+ 
+   static void SettingOptionsShutdownStatesFiller(const CSetting *setting, std::vector< std::pair<std::string, int> > &list, int &current, void *data);
+ 
++  bool ProcessAction(const CAction& action);
+ private:
+   void OnSleep();
+   void OnWake();
+diff --git a/xbmc/powermanagement/PowerSyscallVirtualSleep.cpp b/xbmc/powermanagement/PowerSyscallVirtualSleep.cpp
+new file mode 100644
+index 0000000..9e6c8e4
+--- /dev/null
++++ b/xbmc/powermanagement/PowerSyscallVirtualSleep.cpp
+@@ -0,0 +1,84 @@
++/*
++ *      Copyright (C) 2013 Team XBMC
++ *      http://www.xbmc.org
++ *
++ *  This Program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2, or (at your option)
++ *  any later version.
++ *
++ *  This Program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with XBMC; see the file COPYING.  If not, see
++ *  <http://www.gnu.org/licenses/>.
++ *
++ */
++
++#include "PowerSyscallVirtualSleep.h"
++#include "input/Key.h"
++#include "utils/log.h"
++#include "utils/StringUtils.h"
++
++bool CPowerSyscallVirtualSleep::Suspend()
++{
++  if (m_virtualSleepState == VIRTUAL_SLEEP_STATE_AWAKE)
++  {
++    if (VirtualSleep())
++    {
++      m_virtualSleepState = VIRTUAL_SLEEP_STATE_WILL_SLEEP;
++      return true;
++    }
++  }
++
++  return false;
++}
++
++bool CPowerSyscallVirtualSleep::PumpPowerEvents(IPowerEventsCallback *callback)
++{
++  if (m_virtualSleepState == VIRTUAL_SLEEP_STATE_WILL_WAKE)
++  {
++    callback->OnWake();
++    m_virtualSleepState = VIRTUAL_SLEEP_STATE_AWAKE;
++    return true;
++  }
++  else if (m_virtualSleepState == VIRTUAL_SLEEP_STATE_WILL_SLEEP)
++  {
++    callback->OnSleep();
++    m_virtualSleepState = VIRTUAL_SLEEP_STATE_ASLEEP;
++    return true;
++  }
++
++  return false;
++}
++
++bool CPowerSyscallVirtualSleep::ProcessAction(const CAction& action)
++{
++  if (m_virtualSleepState != VIRTUAL_SLEEP_STATE_ASLEEP)
++    return false;
++
++  // device is in virtual sleep, only one of the power keys will
++  // wake it up again.
++  if (action.GetID() == ACTION_BUILT_IN_FUNCTION)
++  {
++    std::string name = action.GetName();
++    StringUtils::ToLower(name);
++    if(name.Equals("xbmc.suspend()") ||
++       name.Equals("shutdown") ||
++       name.Equals("suspend")  ||
++       name.Equals("hibernate"))
++    {
++      if(VirtualWake())
++      {
++        m_virtualSleepState = VIRTUAL_SLEEP_STATE_WILL_WAKE;
++        return false;
++      }
++    }
++  }
++
++  // wasn't a power key, suppress this and stay asleep
++  return true;
++}
+diff --git a/xbmc/powermanagement/PowerSyscallVirtualSleep.h b/xbmc/powermanagement/PowerSyscallVirtualSleep.h
+new file mode 100644
+index 0000000..ef6e682
+--- /dev/null
++++ b/xbmc/powermanagement/PowerSyscallVirtualSleep.h
+@@ -0,0 +1,56 @@
++/*
++ *      Copyright (C) 2013 Team XBMC
++ *      http://www.xbmc.org
++ *
++ *  This Program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2, or (at your option)
++ *  any later version.
++ *
++ *  This Program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with XBMC; see the file COPYING.  If not, see
++ *  <http://www.gnu.org/licenses/>.
++ *
++ */
++
++#ifndef _POWER_SYSCALL_VIRTUAL_SLEEP_H_
++#define _POWER_SYSCALL_VIRTUAL_SLEEP_H_
++#include "IPowerSyscall.h"
++
++// Systems that have no native standby mode, can base their
++// IPowerSyscall implementation on this class, and need only
++// implement VirtualSleep()/VirtualWake().
++class CPowerSyscallVirtualSleep : public CAbstractPowerSyscall
++{
++public:
++  CPowerSyscallVirtualSleep() : m_virtualSleepState(VIRTUAL_SLEEP_STATE_AWAKE) {}
++  virtual ~CPowerSyscallVirtualSleep() {}
++
++  virtual bool CanSuspend() { return true; }
++  virtual bool Suspend();
++
++  virtual bool PumpPowerEvents(IPowerEventsCallback *callback);
++
++  virtual bool ProcessAction(const CAction& action);
++
++  virtual bool VirtualSleep() = 0;
++  virtual bool VirtualWake()  = 0;
++
++protected:
++  // keep track of virtual sleep state for devices that support it
++  typedef enum {
++    VIRTUAL_SLEEP_STATE_AWAKE = 0,
++    VIRTUAL_SLEEP_STATE_ASLEEP,
++    VIRTUAL_SLEEP_STATE_WILL_WAKE,
++    VIRTUAL_SLEEP_STATE_WILL_SLEEP,
++  } VirtualSleepState;
++
++  VirtualSleepState m_virtualSleepState;
++};
++
++#endif // _POWER_SYSCALL_VIRTUAL_SLEEP_H_
+
+From b50d81dd02214ed26210bad3d3102312ab7bab38 Mon Sep 17 00:00:00 2001
+From: macrule <macrule2001@yahoo.de>
+Date: Wed, 17 Apr 2013 13:24:22 +0200
+Subject: [PATCH 34/95] Added power management support for the Raspberry Pi.
+ Since it doesn't support true standby, we fake it by turning video on or off,
+ and ignoring remote inputs during the standby phase.
+
+---
+ xbmc/powermanagement/PowerManager.cpp              |  4 ++
+ xbmc/powermanagement/linux/Makefile                |  1 +
+ .../linux/RaspberryPIPowerSyscall.cpp              | 38 +++++++++++++++++
+ .../linux/RaspberryPIPowerSyscall.h                | 49 ++++++++++++++++++++++
+ 4 files changed, 92 insertions(+)
+ create mode 100644 xbmc/powermanagement/linux/RaspberryPIPowerSyscall.cpp
+ create mode 100644 xbmc/powermanagement/linux/RaspberryPIPowerSyscall.h
+
+diff --git a/xbmc/powermanagement/PowerManager.cpp b/xbmc/powermanagement/PowerManager.cpp
+index 6e819d9..2d8c750 100644
+--- a/xbmc/powermanagement/PowerManager.cpp
++++ b/xbmc/powermanagement/PowerManager.cpp
+@@ -38,6 +38,8 @@
+ 
+ #if defined(TARGET_DARWIN)
+ #include "osx/CocoaPowerSyscall.h"
++#elif defined(TARGET_RASPBERRY_PI)
++#include "linux/RaspberryPIPowerSyscall.h"
+ #elif defined(TARGET_ANDROID)
+ #include "android/AndroidPowerSyscall.h"
+ #elif defined(TARGET_POSIX)
+@@ -71,6 +73,8 @@ void CPowerManager::Initialize()
+ {
+ #if defined(TARGET_DARWIN)
+   m_instance = new CCocoaPowerSyscall();
++#elif defined(TARGET_RASPBERRY_PI)
++  m_instance = new CRaspberryPIPowerSyscall();
+ #elif defined(TARGET_ANDROID)
+   m_instance = new CAndroidPowerSyscall();
+ #elif defined(TARGET_POSIX)
+diff --git a/xbmc/powermanagement/linux/Makefile b/xbmc/powermanagement/linux/Makefile
+index e9d95fb..b130812 100644
+--- a/xbmc/powermanagement/linux/Makefile
++++ b/xbmc/powermanagement/linux/Makefile
+@@ -1,5 +1,6 @@
+ SRCS=ConsoleDeviceKitPowerSyscall.cpp \
+      ConsoleUPowerSyscall.cpp \
++     RaspberryPIPowerSyscall.cpp \
+      UPowerSyscall.cpp \
+      LogindUPowerSyscall.cpp
+ 
+diff --git a/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.cpp b/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.cpp
+new file mode 100644
+index 0000000..10deeb8
+--- /dev/null
++++ b/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.cpp
+@@ -0,0 +1,38 @@
++/*
++ *      Copyright (C) 2013 Team XBMC
++ *      http://www.xbmc.org
++ *
++ *  This Program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2, or (at your option)
++ *  any later version.
++ *
++ *  This Program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with XBMC; see the file COPYING.  If not, see
++ *  <http://www.gnu.org/licenses/>.
++ *
++ */
++
++#if defined(TARGET_RASPBERRY_PI)
++
++#include "RaspberryPIPowerSyscall.h"
++#include "RBP.h"
++
++bool CRaspberryPIPowerSyscall::VirtualSleep()
++{
++  g_RBP.SuspendVideoOutput();
++  return true;
++}
++
++bool CRaspberryPIPowerSyscall::VirtualWake()
++{
++  g_RBP.ResumeVideoOutput();
++  return true;
++}
++
++#endif
+diff --git a/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.h b/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.h
+new file mode 100644
+index 0000000..fd1d67c
+--- /dev/null
++++ b/xbmc/powermanagement/linux/RaspberryPIPowerSyscall.h
+@@ -0,0 +1,49 @@
++#pragma once
++/*
++ *      Copyright (C) 2013 Team XBMC
++ *      http://www.xbmc.org
++ *
++ *  This Program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2, or (at your option)
++ *  any later version.
++ *
++ *  This Program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with XBMC; see the file COPYING.  If not, see
++ *  <http://www.gnu.org/licenses/>.
++ *
++ */
++
++#ifndef _RASPBERRY_PI_POWER_SYSCALL_H_
++#define _RASPBERRY_PI_POWER_SYSCALL_H_
++
++#if defined(TARGET_RASPBERRY_PI)
++#include "powermanagement/PowerSyscallVirtualSleep.h"
++
++class CRaspberryPIPowerSyscall : public CPowerSyscallVirtualSleep
++{
++public:
++  CRaspberryPIPowerSyscall() : CPowerSyscallVirtualSleep() {}
++  virtual ~CRaspberryPIPowerSyscall() {}
++
++  virtual bool Powerdown()    { return false; }
++  virtual bool Hibernate()    { return false; }
++  virtual bool Reboot()       { return false; }
++
++  virtual bool CanPowerdown() { return false; }
++  virtual bool CanHibernate() { return false; }
++  virtual bool CanReboot()    { return true; }
++
++  virtual int  BatteryLevel() { return 0; }
++
++  virtual bool VirtualSleep();
++  virtual bool VirtualWake();
++};
++#endif // TARGET_RASPBERRY_PI
++
++#endif // _RASPBERRY_PI_POWER_SYSCALL_H_

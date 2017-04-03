@@ -1,0 +1,13 @@
+#!/bin/sh
+
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.ru
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.ru)
+################################################################################
+
+. /etc/profile
+
+ADDON_DIR="$HOME/.kodi/addons/driver.dvb.sundtek-mediatv"
+
+logger -t Sundtek "### Sundtek driver stop ###"
+mediaclient --shutdown

@@ -1,0 +1,19 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+if [ -f /storage/.cache/services/lcdd.conf ]; then
+  . /storage/.cache/services/lcdd.conf
+
+  if [ "$LCD_DRIVER" == "none" ]; then
+    exit 0
+  fi
+
+  LCDCONF=/etc/LCDd.conf
+  if [ -f /storage/.config/LCDd.conf ]; then
+    LCDCONF=/storage/.config/LCDd.conf
+  fi
+  exec /usr/sbin/LCDd -f -c $LCDCONF -d $LCD_DRIVER
+fi

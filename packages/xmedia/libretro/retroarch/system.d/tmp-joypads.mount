@@ -1,0 +1,13 @@
+[Unit]
+Description=Joypad configs directory RetroArch
+Before=retroarch.service
+ConditionPathExists=/var/lock/start.games
+
+[Mount]
+What=none
+Where=/tmp/joypads
+Type=overlay
+Options=lowerdir=/etc/retroarch-joypad-autoconfig,upperdir=/storage/retroarch/joypads,workdir=/storage/.tmp/joypads-workdir
+
+[Install]
+WantedBy=kodi.target

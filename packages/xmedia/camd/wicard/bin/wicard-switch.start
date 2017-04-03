@@ -1,0 +1,19 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+LOCK_DIR="/var/lock"
+SERVICE_DIR="/storage/.cache/services"
+
+rm -f $LOCK_DIR/start.wicard
+
+if [ -f "$SERVICE_DIR/wicard.conf" ]; then
+  . $SERVICE_DIR/wicard.conf
+
+  if [ "$WICARD_TYPE" == "Always" ]; then
+      touch $LOCK_DIR/start.wicard
+  fi
+
+fi

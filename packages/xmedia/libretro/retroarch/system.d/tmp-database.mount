@@ -1,0 +1,13 @@
+[Unit]
+Description=Database directory RetroArch
+Before=retroarch.service
+ConditionPathExists=/var/lock/start.games
+
+[Mount]
+What=none
+Where=/tmp/database
+Type=overlay
+Options=lowerdir=/usr/share/libretro-database,upperdir=/storage/retroarch/database,workdir=/storage/.tmp/database-workdir
+
+[Install]
+WantedBy=kodi.target

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.ru
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.ru)
+################################################################################
+
+touch /var/lock/disable.eventlircd
+. /storage/.cache/services/remote.conf
+
+[ -z "$EVENT_DEVICE1" ] && EVENT_DEVICE1="none"
+[ -z "$EVENT_DEVICE2" ] && EVENT_DEVICE2="none"
+
+if [ "$EVENT_DEVICE1" != "none" -o "$EVENT_DEVICE2" != "none" ] ; then
+  [ "$EVENT_DEVICE1" == "$EVENT_DEVICE2" ] && EVENT_DEVICE2="none"
+  ARG_EVENT_DEVICE=""
+  [ "$EVENT_DEVICE1" != "none" ] && ARG_EVENT_DEVICE="$ARG_EVENT_DEVICE /dev/input/$EVENT_DEVICE1"
+  [ "$EVENT_DEVICE2" != "none" ] && ARG_EVENT_DEVICE="$ARG_EVENT_DEVICE /dev/input/$EVENT_DEVICE2"
+  logger -t inputlircd "start: $ARG_EVENT_DEVICE"
+  /usr/sbin/inputlircd -g -m 0 -c $ARG_EVENT_DEVICE
+  [ -S /run/lirc/lircd ] && ln -sf /run/lirc/lircd /dev/lircd
+fi

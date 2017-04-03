@@ -1,0 +1,16 @@
+[Unit]
+Description=Cloud Box.com mount
+Requires=network-online.target
+After=network-online.target
+Before=kodi.service vdr.service
+ConditionPathExists=/storage/.cache/services/mnt-box.conf
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/cloud-start box
+ExecStop=/usr/bin/cloud-stop box
+TimeoutStopSec=1s
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

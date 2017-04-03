@@ -1,0 +1,27 @@
+diff -Naurp vtuner-apps-116/build/arm/Makefile vtuner-apps-116-patch/build/arm/Makefile
+--- vtuner-apps-116/build/arm/Makefile	2015-04-22 17:09:04.399200845 +0300
++++ vtuner-apps-116-patch/build/arm/Makefile	2015-04-22 16:42:41.000000000 +0300
+@@ -1,15 +1,13 @@
+-ARCH=arm
+--include ../../Make.config
+-
+-CC=$(CC-$(ARCH))
+-CXX=$(CXX-$(ARCH))
+-CFLAGS=-fpic -DHAVE_DVB_API_VERSION=5
+-LDFLAGS=-lpthread -lrt
++ARCH = arm
++CC  ?= gcc
++CXX ?= cxx
++CFLAGS  ?= -fpic -DHAVE_DVB_API_VERSION=5
++LDFLAGS ?= -lpthread -lrt
++STRIP   ?= strip
+ DRIVER=vtuner-dvb-3
+-STRIP=$(STRIP-$(ARCH))
+ 
+-all: ../../dist/$(ARCH)/vtunerd.$(ARCH) 
+-	$(STRIP) ../../dist/$(ARCH)/vtunerd.$(ARCH) 
++all: ../../dist/$(ARCH)/vtunerd.$(ARCH) ../../dist/$(ARCH)/vtunerc.$(ARCH) 
++	$(STRIP) ../../dist/$(ARCH)/vtunerd.$(ARCH) ../../dist/$(ARCH)/vtunerc.$(ARCH) 
+ 	
+ -include ../../Make.rules
+ 	

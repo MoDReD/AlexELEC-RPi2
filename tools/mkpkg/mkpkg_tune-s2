@@ -1,0 +1,32 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+PKG_NAME=tune-s2
+GIT=https://bitbucket.org/updatelee/tune-s2.git
+
+echo "getting sources..."
+  if [ ! -d $PKG_NAME.git ]; then
+    git clone $GIT $PKG_NAME.git
+  fi
+
+  cd $PKG_NAME.git
+    git pull
+    GIT_REV=`git log -n1 --format=%h`
+  cd ..
+
+echo "copying sources..."
+  rm -rf $PKG_NAME-$GIT_REV
+  cp -R $PKG_NAME.git $PKG_NAME-$GIT_REV
+
+echo "cleaning sources..."
+  rm -rf $PKG_NAME-$GIT_REV/.git
+
+echo "packing sources..."
+  tar cvJf $PKG_NAME-$GIT_REV.tar.xz $PKG_NAME-$GIT_REV
+
+echo "remove temporary sourcedir..."
+#  rm -rf $PKG_NAME-$GIT_REV
+  rm -rf $PKG_NAME.git

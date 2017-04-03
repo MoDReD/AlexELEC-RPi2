@@ -1,0 +1,54 @@
+diff -Naurp vdr-plugin-rpihddevice-5f28243/omxdevice.c vdr-plugin-rpihddevice-5f28243-patch/omxdevice.c
+--- vdr-plugin-rpihddevice-5f28243/omxdevice.c	2016-01-06 10:21:23.000000000 +0200
++++ vdr-plugin-rpihddevice-5f28243-patch/omxdevice.c	2016-01-08 08:10:47.000000000 +0200
+@@ -353,7 +353,7 @@ int cOmxDevice::PlayVideo(const uchar *D
+ 				DLOG("set video codec to %s", cVideoCodec::Str(m_videoCodec));
+ 			}
+ 			else
+-				Skins.QueueMessage(mtError, tr("video format not supported!"));
++				Skins.QueueMessage(mtError, tr("MPEG-2 license key missing!"));
+ 		}
+ 	}
+ 
+diff -Naurp vdr-plugin-rpihddevice-5f28243/po/de_DE.po vdr-plugin-rpihddevice-5f28243-patch/po/de_DE.po
+--- vdr-plugin-rpihddevice-5f28243/po/de_DE.po	2016-01-06 10:21:23.000000000 +0200
++++ vdr-plugin-rpihddevice-5f28243-patch/po/de_DE.po	2016-01-08 08:10:47.000000000 +0200
+@@ -18,8 +18,8 @@ msgstr ""
+ "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+ "X-Generator: Poedit 1.5.5\n"
+ 
+-msgid "video format not supported!"
+-msgstr "Videoformat nicht unterstützt!"
++msgid "MPEG-2 license key missing!"
++msgstr "MPEG-2 Lizenz Schlüssel fehlt!"
+ 
+ msgid "HD output device for Raspberry Pi"
+ msgstr "HD Ausgabegerät für Raspberry Pi"
+diff -Naurp vdr-plugin-rpihddevice-5f28243/po/fi_FI.po vdr-plugin-rpihddevice-5f28243-patch/po/fi_FI.po
+--- vdr-plugin-rpihddevice-5f28243/po/fi_FI.po	2016-01-06 10:21:23.000000000 +0200
++++ vdr-plugin-rpihddevice-5f28243-patch/po/fi_FI.po	2016-01-08 08:10:47.000000000 +0200
+@@ -16,8 +16,8 @@ msgstr ""
+ "Content-Type: text/plain; charset=UTF-8\n"
+ "Content-Transfer-Encoding: 8bit\n"
+ 
+-msgid "video format not supported!"
+-msgstr "Kuvaformaatti ei ole tuettu!"
++msgid "MPEG-2 license key missing!"
++msgstr ""
+ 
+ msgid "HD output device for Raspberry Pi"
+ msgstr "Raspberry Pi HD-ulostulolaite"
+diff -Naurp vdr-plugin-rpihddevice-5f28243/po/hu_HU.po vdr-plugin-rpihddevice-5f28243-patch/po/hu_HU.po
+--- vdr-plugin-rpihddevice-5f28243/po/hu_HU.po	2016-01-06 10:21:23.000000000 +0200
++++ vdr-plugin-rpihddevice-5f28243-patch/po/hu_HU.po	2016-01-08 08:10:47.000000000 +0200
+@@ -18,8 +18,8 @@ msgstr ""
+ "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+ "X-Generator: Poedit 1.6.11\n"
+ 
+-msgid "video format not supported!"
+-msgstr "A videoformátum nem támogatott!"
++msgid "MPEG-2 license key missing!"
++msgstr ""
+ 
+ msgid "HD output device for Raspberry Pi"
+ msgstr "Raspberry Pi HD kimeneti eszköz "

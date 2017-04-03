@@ -1,0 +1,24 @@
+#!/bin/sh
+
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+if [ ! -f "/etc/mysql/conf.d/root-pass.cnf" ]; then
+
+# hack to make sure mysqld is fully started
+sleep 2
+
+/usr/bin/mysql -u root < /usr/share/mysql/mysql_secure_installation.sql
+cat > /etc/mysql/conf.d/root-pass.cnf <<EOF
+[mysql]
+user=root
+password=mcpc
+
+[mysqladmin]
+user=root
+password=mcpc
+EOF
+
+fi

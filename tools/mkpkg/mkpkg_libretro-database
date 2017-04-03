@@ -1,0 +1,30 @@
+#!/bin/sh
+################################################################################
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.in.ua)
+################################################################################
+
+echo "getting sources..."
+  if [ ! -d libretro-database.git ]; then
+    git clone https://github.com/libretro/libretro-database.git libretro-database.git
+  fi
+
+  cd libretro-database.git
+    git pull
+    GIT_REV=`git log -n1 --format=%h`
+  cd ..
+
+echo "copying sources..."
+  rm -rf libretro-database-$GIT_REV
+  cp -R libretro-database.git libretro-database-$GIT_REV
+
+echo "cleaning sources..."
+  rm -rf libretro-database-$GIT_REV/.git
+  rm libretro-database-$GIT_REV/.gitignore
+
+echo "packing sources..."
+  tar cvJf libretro-database-$GIT_REV.tar.xz libretro-database-$GIT_REV
+
+echo "remove temporary sourcedir..."
+  rm -rf libretro-database-$GIT_REV
+  rm -rf libretro-database.git
