@@ -301,11 +301,12 @@ IMAGE_NAME="$DISTRONAME-$TARGET_VERSION"
           UUID_STORAGE="$(uuidgen)" \
           EXTRA_CMDLINE="$EXTRA_CMDLINE" \
           $SCRIPTS/mkimage
-
-          # cleanup release dir
-          rm -rf $RELEASE_DIR
       fi
 
+      if [ "$1" != "cut" ]; then
+        # cleanup release dir
+        rm -rf $RELEASE_DIR
+      fi
       rm -f $TARGET_IMG/$IMAGE_NAME.system
       rm -f $TARGET_IMG/$IMAGE_NAME.kernel
 
