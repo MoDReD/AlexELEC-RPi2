@@ -236,7 +236,7 @@ fi # bootloader
 
 # gzip
   echo "image: compressing..."
-  gzip $DISK
+  gzip < $DISK > $DISK.gz
 
 # set owner
   if [ -n "$SUDO_USER" ] ; then

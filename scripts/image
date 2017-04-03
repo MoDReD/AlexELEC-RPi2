@@ -270,7 +270,7 @@ IMAGE_NAME="$DISTRONAME-$TARGET_VERSION"
         md5sum -t target/KERNEL > target/KERNEL.md5;
       )
 
-      if [ ! "$1" = "cut" ]; then
+      if [ "$1" != "cut" ]; then
         # create target directory
         mkdir -p $TARGET_IMG
 
@@ -303,19 +303,6 @@ IMAGE_NAME="$DISTRONAME-$TARGET_VERSION"
           $SCRIPTS/mkimage
       fi
 
-      if [ ! "$1" = "cut" ]; then
-        # cleanup release dir
-        rm -rf $RELEASE_DIR
-
-        # create md5sum's
-        echo "Creating md5sum's release"
-        pushd target > /dev/null
-        md5sum -t $IMAGE_NAME.tar > $IMAGE_NAME.tar.md5
-        if [ "$1" = "mkimage" -a -n "$BOOTLOADER" ]; then
-          md5sum -t $IMAGE_NAME.img.gz > $IMAGE_NAME.img.gz.md5
-        fi
-        popd > /dev/null
-      fi
       rm -f $TARGET_IMG/$IMAGE_NAME.system
       rm -f $TARGET_IMG/$IMAGE_NAME.kernel
 
