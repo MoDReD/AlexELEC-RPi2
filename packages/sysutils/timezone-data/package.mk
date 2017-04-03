@@ -10,7 +10,6 @@ PKG_ARCH="any"
 PKG_LICENSE="Public Domain"
 PKG_SITE="http://www.iana.org/time-zones"
 PKG_URL="https://github.com/eggert/tz/archive/$PKG_VERSION.tar.gz"
-PKG_SOURCE_DIR="tz-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_PRIORITY="optional"
 PKG_SECTION="system"
@@ -20,6 +19,11 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 PKG_MAKE_OPTS_TARGET="CC=$HOST_CC LDFLAGS="
+
+unpack() {
+  tar -xzf $SOURCES/$PKG_NAME/$PKG_VERSION.tar.gz -C $BUILD
+  mv $BUILD/tz-$PKG_VERSION $BUILD/$PKG_NAME-$PKG_VERSION
+}
 
 makeinstall_target() {
   make TOPDIR="$INSTALL" install
