@@ -1,0 +1,34 @@
+diff -Naurp kodi-16.1-c6f6e0b/system/keymaps/keyboard.xml kodi-16.1-c6f6e0b-patch/system/keymaps/keyboard.xml
+--- kodi-16.1-c6f6e0b/system/keymaps/keyboard.xml	2017-04-04 10:12:33.000000000 +0300
++++ kodi-16.1-c6f6e0b-patch/system/keymaps/keyboard.xml	2017-04-04 09:59:25.000000000 +0300
+@@ -607,8 +607,8 @@
+   </NumericInput>
+   <FullscreenLiveTV>
+     <keyboard>
+-      <left>StepBack</left>
+-      <right>StepForward</right>
++      <left>ActivateWindow(PVROSDChannels)</left>
++      <right>ActivateWindow(PVROSDGuide)</right>
+       <up>Up</up>
+       <down>Down</down>
+       <return>OSD</return>
+diff -Naurp kodi-16.1-c6f6e0b/system/keymaps/remote.xml kodi-16.1-c6f6e0b-patch/system/keymaps/remote.xml
+--- kodi-16.1-c6f6e0b/system/keymaps/remote.xml	2017-04-04 10:12:33.000000000 +0300
++++ kodi-16.1-c6f6e0b-patch/system/keymaps/remote.xml	2017-04-04 10:09:32.000000000 +0300
+@@ -572,12 +572,14 @@
+   </Favourites>
+   <FullscreenLiveTV>
+     <remote>
+-      <left>Playlist</left>
+-      <right>ActivateWindow(pvrosdguide)</right>
++      <left>ActivateWindow(PVROSDChannels)</left>
++      <right>ActivateWindow(PVROSDGuide)</right>
+       <up>Up</up>
+       <down>Down</down>
+       <pageplus>ChannelUp</pageplus>
+       <pageminus>ChannelDown</pageminus>
++      <return mod="longpress">ActivateWindow(PVROSDChannels)</return>
++      <enter mod="longpress">ActivateWindow(PVROSDChannels)</enter>
+     </remote>
+   </FullscreenLiveTV>
+   <FullscreenRadio>
