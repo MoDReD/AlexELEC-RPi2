@@ -1,0 +1,17 @@
+diff -Naurp kodi-theme-AeonNox-e6deb3b/addon.xml kodi-theme-AeonNox-e6deb3b-patch/addon.xml
+--- kodi-theme-AeonNox-e6deb3b/addon.xml	2016-05-03 00:20:54.000000000 +0300
++++ kodi-theme-AeonNox-e6deb3b-patch/addon.xml	2017-04-04 07:51:32.000000000 +0300
+@@ -1,9 +1,9 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <addon
+-  id="skin.aeon.nox.5"
+-  version="5.8.7"
+-  name="Aeon Nox"
+-  provider-name="BigNoid">
++  id="skin.aeon.nox.5ae"
++  version="5.8.8"
++  name="Aeon Nox AE"
++  provider-name="BigNoid (Alex@ELEC)">
+ 	<requires>
+ 		<import addon="xbmc.gui" version="5.10.0"/>
+ 		<import addon="script.grab.fanart" version="0.12.8"/>

@@ -23,7 +23,7 @@
 # Skins to install (Confluence)
 # Space separated list is supported,
 # e.g. SKINS="Confluence"
-  SKINS="Confluence"
+  SKINS="Confluence AeonNox"
 
 # Default Skin (Confluence)
   SKIN_DEFAULT="Confluence"

@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of Alex@ELEC - http://www.alexelec.in.ua
-#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+#      Copyright (C) 2011-2017 Alexandr Zuyev (alex@alexelec.in.ua)
 ################################################################################
 
 PKG_NAME="mediacenter"
@@ -22,7 +22,6 @@ for i in $SKINS; do
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $MEDIACENTER-theme-$i"
 done
 
-if [ "$MEDIACENTER" = "kodi" ]; then
 # some python stuff needed for various addons
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET Pillow"
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET simplejson"
@@ -55,4 +54,3 @@ if [ "$MEDIACENTER" = "kodi" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET audioencoder.lame"
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET audioencoder.vorbis"
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET audioencoder.wav"
-fi

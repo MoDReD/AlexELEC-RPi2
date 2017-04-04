@@ -1,0 +1,24 @@
+diff -Naurp kodi-theme-AeonNox-e6deb3b/1080i/DialogSeekBar.xml kodi-theme-AeonNox-e6deb3b-patch/1080i/DialogSeekBar.xml
+--- kodi-theme-AeonNox-e6deb3b/1080i/DialogSeekBar.xml	2016-05-03 00:20:54.000000000 +0300
++++ kodi-theme-AeonNox-e6deb3b-patch/1080i/DialogSeekBar.xml	2017-04-04 08:09:01.000000000 +0300
+@@ -22,7 +22,7 @@
+ 				<height>38</height>
+ 				<texturebg border="2">osd/texturebg.png</texturebg>
+ 				<lefttexture>-</lefttexture>
+-				<midtexture border="2">osd/midtexture_cache.png</midtexture>
++				<midtexture border="2">new_pvr/texturebg3.png</midtexture>
+ 				<righttexture>-</righttexture>
+ 				<overlaytexture>-</overlaytexture>
+ 				<info>Player.ProgressCache</info>
+diff -Naurp kodi-theme-AeonNox-e6deb3b/1080i/includes.xml kodi-theme-AeonNox-e6deb3b-patch/1080i/includes.xml
+--- kodi-theme-AeonNox-e6deb3b/1080i/includes.xml	2016-05-03 00:20:54.000000000 +0300
++++ kodi-theme-AeonNox-e6deb3b-patch/1080i/includes.xml	2017-04-04 08:09:41.000000000 +0300
+@@ -412,7 +412,7 @@
+ 					<height>37</height>
+ 					<texturebg border="2">osd/texturebg.png</texturebg>
+ 					<lefttexture>-</lefttexture>
+-					<midtexture border="2">osd/midtexture_cache.png</midtexture>
++					<midtexture border="2">new_pvr/texturebg3.png</midtexture>
+ 					<righttexture>-</righttexture>
+ 					<overlaytexture>-</overlaytexture>
+ 					<info>Player.ProgressCache</info>
