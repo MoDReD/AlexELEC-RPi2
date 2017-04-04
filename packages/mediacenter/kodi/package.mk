@@ -408,8 +408,8 @@ post_makeinstall_target() {
   fi
 
 # install addons config
-  if [ -d $PKG_DIR/config/weather.yahoo ]; then
-    cp -R $PKG_DIR/config/weather.yahoo $INSTALL/usr/share/kodi/config
+  if [ -d $PKG_DIR/config/weather.openweathermap.extended ]; then
+    cp -R $PKG_DIR/config/weather.openweathermap.extended $INSTALL/usr/share/kodi/config
   fi
   if [ -d $PKG_DIR/config/script.skinshortcuts ]; then
     cp -R $PKG_DIR/config/script.skinshortcuts $INSTALL/usr/share/kodi/config

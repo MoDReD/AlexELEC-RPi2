@@ -66,7 +66,7 @@
         <teletextenabled>false</teletextenabled>
     </videoplayer>
     <weather>
-        <addon>weather.yahoo</addon>
+        <addon>weather.openweathermap.extended</addon>
         <currentlocation default="true">1</currentlocation>
     </weather>
     <skinsettings>
