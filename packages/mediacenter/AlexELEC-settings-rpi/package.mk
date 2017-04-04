@@ -1,10 +1,10 @@
 ################################################################################
 #      This file is part of Alex@ELEC - http://www.alexelec.in.ua
-#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+#      Copyright (C) 2011-2017 Alexandr Zuyev (alex@alexelec.in.ua)
 ################################################################################
 
 PKG_NAME="AlexELEC-settings-rpi"
-PKG_VERSION="0.2.18"
+PKG_VERSION="0.2.19"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="prop."
