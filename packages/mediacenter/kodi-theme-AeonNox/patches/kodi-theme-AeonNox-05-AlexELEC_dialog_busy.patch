@@ -1,0 +1,42 @@
+diff -Naurp kodi-theme-AeonNox-e6deb3b/1080i/DialogBusy.xml kodi-theme-AeonNox-e6deb3b-patch/1080i/DialogBusy.xml
+--- kodi-theme-AeonNox-e6deb3b/1080i/DialogBusy.xml	2016-05-03 00:20:54.000000000 +0300
++++ kodi-theme-AeonNox-e6deb3b-patch/1080i/DialogBusy.xml	2017-04-04 11:17:25.000000000 +0300
+@@ -32,7 +32,7 @@
+ 				<overlaytexture>-</overlaytexture>
+ 			</control>
+ 			<control type="group">
+-				<visible>!System.Platform.Linux.RaspberryPi</visible>
++				<visible>true</visible>
+ 				<control type="image">
+ 					<description>Busy animation</description>
+ 					<left>34</left>
+@@ -67,12 +67,11 @@
+ 						<description>Busy label</description>
+ 						<left>0</left>
+ 						<top>0</top>
+-						<width>180</width>
++						<width>380</width>
+ 						<height>100</height>
+ 						<align>left</align>
+-						<aligny>center</aligny>
+ 						<label>$INFO[ListItem.Label]</label>
+-						<font>font15_title</font>
++						<font>font13_textbox</font>
+ 					</control>
+ 				</itemlayout>
+ 				<focusedlayout height="100">
+@@ -80,12 +79,11 @@
+ 						<description>Busy label</description>
+ 						<left>0</left>
+ 						<top>0</top>
+-						<width>180</width>
++						<width>380</width>
+ 						<height>100</height>
+ 						<align>left</align>
+-						<aligny>center</aligny>
+ 						<label>$INFO[ListItem.Label]</label>
+-						<font>font15_title</font>
++						<font>font13_textbox</font>
+ 					</control>
+ 				</focusedlayout>
+ 				<content>
