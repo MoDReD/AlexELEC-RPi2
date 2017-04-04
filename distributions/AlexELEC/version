@@ -6,3 +6,6 @@
 
 # ADDON_VERSION: Addon version
   ADDON_VERSION="2.0"
+
+# RLS: set Release
+  RLS="yes"
