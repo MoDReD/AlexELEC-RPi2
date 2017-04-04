@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<shortcuts>
+	<shortcut>
+		<defaultID />
+		<label>Настройки</label>
+		<label2>Пользовательский элемент</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb />
+		<action>RunAddOn(service.alexelec.settings)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Дополнения</label>
+		<label2>Пользовательский элемент</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb />
+		<action>ActivateWindow(AddonBrowser)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Выключение</label>
+		<label2>Пользовательский элемент</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb />
+		<action>ActivateWindow(shutdownmenu)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>7</defaultID>
+		<label>7</label>
+		<label2 />
+		<icon>DefaultShortcut.png</icon>
+		<thumb />
+		<action>ActivateWindow(FileManager)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID>130</defaultID>
+		<label>130</label>
+		<label2 />
+		<icon>DefaultShortcut.png</icon>
+		<thumb />
+		<action>ActivateWindow(SystemInfo)</action>
+	</shortcut>
+</shortcuts>

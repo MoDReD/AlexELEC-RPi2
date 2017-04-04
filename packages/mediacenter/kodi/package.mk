@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of Alex@ELEC - http://www.alexelec.in.ua
-#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+#      Copyright (C) 2011-2017 Alexandr Zuyev (alex@alexelec.in.ua)
 ################################################################################
 
 PKG_NAME="kodi"
@@ -410,6 +410,12 @@ post_makeinstall_target() {
 # install addons config
   if [ -d $PKG_DIR/config/weather.yahoo ]; then
     cp -R $PKG_DIR/config/weather.yahoo $INSTALL/usr/share/kodi/config
+  fi
+  if [ -d $PKG_DIR/config/script.skinshortcuts ]; then
+    cp -R $PKG_DIR/config/script.skinshortcuts $INSTALL/usr/share/kodi/config
+  fi
+  if [ -d $PKG_DIR/config/skin.aeon.nox.5ae ]; then
+    cp -R $PKG_DIR/config/skin.aeon.nox.5ae $INSTALL/usr/share/kodi/config
   fi
 }
 
