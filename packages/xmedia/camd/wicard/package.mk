@@ -26,11 +26,7 @@ makeinstall_target() {
   mkdir -p $INSTALL/usr/config/wicard
     cp $PKG_DIR/config/* $INSTALL/usr/config/wicard
   mkdir -p $INSTALL/usr/bin
-    cp $PKG_DIR/bin/wicard.start $INSTALL/usr/bin/
-    cp $PKG_DIR/bin/wicard-switch.start $INSTALL/usr/bin/
-  # Wicard bin must be writeable
-  cp $PKG_DIR/bin/wicardd $INSTALL/usr/config/wicard/
-    ln -sf /storage/.config/wicard/wicardd $INSTALL/usr/bin/wicardd
+    cp $PKG_DIR/bin/* $INSTALL/usr/bin
 }
 
 post_install() {

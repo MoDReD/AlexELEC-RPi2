@@ -4,7 +4,7 @@ Requires=wicard-switch.service
 After=network-online.target wicard-switch.service
 Before=vdr.service
 Wants=network-online.target
-ConditionPathExists=|/var/lock/start.wicard
+ConditionPathExists=/var/lock/start.wicard
 
 [Service]
 ExecStart=/bin/sh -c 'exec /usr/bin/wicard.start'
