@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of Alex@ELEC - http://www.alexelec.in.ua
-#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+#      Copyright (C) 2011-2017 Alexandr Zuyev (alex@alexelec.in.ua)
 ################################################################################
 
 PKG_NAME="xmedia"
@@ -59,6 +59,5 @@ PKG_AUTORECONF="no"
 
 # dvb drivers
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET vtuner-apps"
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET ljalves"
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET media_build"
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET linux-s2-liplianin"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET media_build_cc"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET s2-liplianin"

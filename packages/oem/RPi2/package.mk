@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of Alex@ELEC - http://www.alexelec.ru
-#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.ru)
+#      Copyright (C) 2011-2017 Alexandr Zuyev (alex@alexelec.ru)
 ################################################################################
 
 PKG_NAME="oem"
