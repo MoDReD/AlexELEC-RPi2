@@ -3,13 +3,13 @@
 #      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
 ################################################################################
 
-PKG_NAME="linux-s2-liplianin"
+PKG_NAME="s2-liplianin"
 PKG_VERSION="v39.40"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://bitbucket.org/CrazyCat/s2-liplianin-v39/"
-PKG_URL="$ALEXELEC_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_URL="$ALEXELEC_SRC/linux-$PKG_NAME-$PKG_VERSION.tar.xz"
 PKG_BUILD_DEPENDS_TARGET="toolchain linux"
 PKG_PRIORITY="optional"
 PKG_SECTION="xmedia/dvb"
@@ -18,12 +18,21 @@ PKG_LONGDESC="DVB-S(S2) drivers for Linux - Igor M. Liplianin repo (v39)."
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
+unpack() {
+  tar xJf $SOURCES/$PKG_NAME/linux-$PKG_NAME-$PKG_VERSION.tar.xz -C $BUILD
+  mv $BUILD/linux-$PKG_NAME-$PKG_VERSION $BUILD/$PKG_NAME-$PKG_VERSION
+}
+
+pre_make_target() {
+  unset LDFLAGS
+}
+
 make_target() {
   cd $ROOT/$PKG_BUILD
-  LDFLAGS="" make DIR=$(kernel_path) clean
-  LDFLAGS="" make DIR=$(kernel_path) prepare
-  sed -i -e "s|^CONFIG_IR_LIRC_CODEC=.*$|# CONFIG_IR_LIRC_CODEC is not set|" v4l/.config
-  LDFLAGS="" make DIR=$(kernel_path)
+  make DIR=$(kernel_path) clean
+  make DIR=$(kernel_path) prepare
+  sed -i -e "s|^CONFIG_VIDEO_S5C73M3=.*$|# CONFIG_VIDEO_S5C73M3 is not set|" v4l/.config
+  make DIR=$(kernel_path)
 }
 
 makeinstall_target() {
@@ -31,7 +40,7 @@ makeinstall_target() {
 }
 
 post_install() {
-  MOD_VER=`ls $BUILD/linux*/.install_pkg/lib/modules`
+  MOD_VER=$(get_module_dir)
 
   # install s2-liplianin drivers
   cp -Pa $INSTALL/lib/modules/$MOD_VER $INSTALL/lib/modules/$MOD_VER-s2
