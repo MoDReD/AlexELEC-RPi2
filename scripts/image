@@ -159,31 +159,33 @@ IMAGE_NAME="$DISTRONAME-$TARGET_VERSION"
   fi
 
 # run depmod
-  MODVER=`ls $BUILD/linux*/.install_pkg/lib/modules`
+  MODVER=`ls $BUILD/linux-*/.install_pkg/lib/modules`
 
   # move original modules dir
   mv -f $INSTALL/lib/modules/$MODVER $INSTALL/lib/modules/$MODVER-core
   ln -sf /storage/.modules/$MODVER $INSTALL/lib/modules/$MODVER
 
   # Core
-  find $INSTALL/lib/modules/$MODVER-core/ -name *.ko | \
+  find $INSTALL/lib/modules/$MODVER-core/ -name "*.ko" | \
     sed -e "s,$INSTALL/lib/modules/$MODVER-core/,," > $INSTALL/lib/modules/$MODVER-core/modules.order
-  $ROOT/$TOOLCHAIN/bin/depmod -b $INSTALL $MODVER-core > /dev/null
-  # TBS-Open
-  find $INSTALL/lib/modules/$MODVER-tbs/ -name *.ko | \
-    sed -e "s,$INSTALL/lib/modules/$MODVER-tbs/,," > $INSTALL/lib/modules/$MODVER-tbs/modules.order
-  $ROOT/$TOOLCHAIN/bin/depmod -b $INSTALL $MODVER-tbs > /dev/null
-  # Media_Build
-  find $INSTALL/lib/modules/$MODVER-mb/ -name *.ko | \
-    sed -e "s,$INSTALL/lib/modules/$MODVER-mb/,," > $INSTALL/lib/modules/$MODVER-mb/modules.order
-  $ROOT/$TOOLCHAIN/bin/depmod -b $INSTALL $MODVER-mb > /dev/null
-  # s2-liplianin
-  find $INSTALL/lib/modules/$MODVER-s2/ -name *.ko | \
-    sed -e "s,$INSTALL/lib/modules/$MODVER-s2/,," > $INSTALL/lib/modules/$MODVER-s2/modules.order
-  $ROOT/$TOOLCHAIN/bin/depmod -b $INSTALL $MODVER-s2 > /dev/null
+  $ROOT/$TOOLCHAIN/bin/depmod -b $INSTALL $MODVER-core 2> /dev/null
+
+  # Media_Build_CrazyCat
+  if [ -d "$INSTALL/lib/modules/$MODVER-mb" ]; then
+    find $INSTALL/lib/modules/$MODVER-mb/ -name "*.ko" | \
+      sed -e "s,$INSTALL/lib/modules/$MODVER-mb/,," > $INSTALL/lib/modules/$MODVER-mb/modules.order
+    $ROOT/$TOOLCHAIN/bin/depmod -b $INSTALL $MODVER-mb 2> /dev/null
+  fi
+
+  # S2-liplianin
+  if [ -d "$INSTALL/lib/modules/$MODVER-s2" ]; then
+    find $INSTALL/lib/modules/$MODVER-s2/ -name "*.ko" | \
+      sed -e "s,$INSTALL/lib/modules/$MODVER-s2/,," > $INSTALL/lib/modules/$MODVER-s2/modules.order
+    $ROOT/$TOOLCHAIN/bin/depmod -b $INSTALL $MODVER-s2 2> /dev/null
+  fi
 
 # strip kernel modules
-  for MOD in `find $INSTALL/lib/modules/ -name *.ko`; do
+  for MOD in `find $INSTALL/lib/modules/ -type f -name "*.ko"`; do
     $STRIP --strip-debug $MOD
   done
 

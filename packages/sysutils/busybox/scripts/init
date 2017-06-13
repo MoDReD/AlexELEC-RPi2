@@ -628,13 +628,7 @@
     CORE_VER=$(uname -r)
 
     case "$DVB_DRIVERS" in
-      "CORE")              # Linux drivers
-          DRIVER="core"
-       ;;
-      "TBS")               # TBS-Open drivers
-          DRIVER="tbs"
-       ;;
-      "MEDIA")             # Media_Build drivers
+      "MEDIA")             # Media_Build_CrazyCat drivers
           DRIVER="mb"
        ;;
       "S2")                # s2-liplianin drivers
