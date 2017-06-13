@@ -1,15 +1,16 @@
 ################################################################################
-#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
-#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.in.ua)
+#      This file is part of Alex@ELEC - http://www.alexelec.ru
+#      Copyright (C) 2011-2017 Alexandr Zuyev (alex@alexelec.ru)
 ################################################################################
 
 PKG_NAME="oscam"
-PKG_VERSION="11211"
-PKG_REV="6"
+PKG_VERSION="d6fe72c"
+PKG_VERSION_NUMBER="11350"
+PKG_REV="104"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.streamboard.tv/oscam/wiki"
-PKG_URL="$ALEXELEC_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_URL="http://repo.or.cz/oscam.git/snapshot/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain pcsc-lite"
 PKG_PRIORITY="optional"
 PKG_SECTION="xmedia/camd"
@@ -17,6 +18,10 @@ PKG_SHORTDESC="oscam: OSCam is Open Source Conditional Access Modul."
 PKG_LONGDESC="OSCam is Open Source Conditional Access Modul."
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
+
+unpack() {
+  tar -xzf $SOURCES/$PKG_NAME/$PKG_VERSION.tar.gz -C $BUILD
+}
 
 configure_target() {
   cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_CONF \
@@ -37,14 +42,10 @@ makeinstall_target() {
   mkdir -p  $INSTALL/usr/config/oscam
     cp -a $PKG_DIR/config $INSTALL/usr/config/oscam
 
-  # Oscam bin must be writeable
-  cp $ROOT/$PKG_BUILD/.$TARGET_NAME/oscam $INSTALL/usr/config/oscam/
-  cp $ROOT/$PKG_BUILD/.$TARGET_NAME/utils/list_smargo $INSTALL/usr/config/oscam/
   mkdir -p  $INSTALL/usr/bin
-    ln -sf /storage/.config/oscam/oscam $INSTALL/usr/bin/oscam
-    ln -sf /storage/.config/oscam/list_smargo $INSTALL/usr/bin/list_smargo
-
-  cp $PKG_DIR/bin/* $INSTALL/usr/bin
+    cp $ROOT/$PKG_BUILD/.$TARGET_NAME/oscam $INSTALL/usr/bin
+    cp $ROOT/$PKG_BUILD/.$TARGET_NAME/utils/list_smargo $INSTALL/usr/bin
+    cp $PKG_DIR/bin/* $INSTALL/usr/bin
 }
 
 post_install() {
