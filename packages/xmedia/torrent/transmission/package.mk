@@ -1,15 +1,15 @@
 ################################################################################
 #      This file is part of Alex@ELEC - http://www.alexelec.in.ua
-#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.in.ua)
+#      Copyright (C) 2011-2017 Alexandr Zuyev (alex@alexelec.in.ua)
 ################################################################################
 
 PKG_NAME="transmission"
-PKG_VERSION="2.84"
+PKG_VERSION="2.92"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.transmissionbt.com/"
-PKG_URL="http://download.transmissionbt.com/files/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_URL="https://github.com/transmission/transmission-releases/raw/master/$PKG_NAME-$PKG_VERSION.tar.xz"
 PKG_DEPENDS_TARGET="toolchain zlib libressl curl libevent"
 PKG_PRIORITY="optional"
 PKG_SECTION="xmedia/torrent"
@@ -27,11 +27,12 @@ PKG_CONFIGURE_OPTS_TARGET="--enable-utp \
             --enable-daemon \
             --with-gnu-ld"
 
-post_install() {
+post_makeinstall_target() {
   mkdir -p $INSTALL/usr/bin
     cp $PKG_DIR/scripts/* $INSTALL/usr/bin
-
   rm -rf $INSTALL/usr/share/transmission/web/LICENSE
+}
 
+post_install() {
   enable_service transmission.service
 }

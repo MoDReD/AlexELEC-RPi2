@@ -2,10 +2,14 @@
 Description=Transmission BitTorrent client
 Requires=network-online.target
 After=network-online.target
-ConditionPathExists=|/storage/.cache/services/transmission.conf
+ConditionPathExists=/storage/.cache/services/transmission.conf
 
 [Service]
-ExecStart=/bin/sh -c 'exec /usr/bin/transmission.start'
+Environment=EVENT_NOEPOLL=1
+Environment=TRANSMISSION_WEB_HOME=/usr/share/transmission/web
+EnvironmentFile=-/run/alexelec/transmission.conf
+ExecStartPre=-/usr/bin/transmission-config
+ExecStart=/usr/bin/transmission-daemon -f $TRANSMISSION_ARG
 TimeoutStopSec=1
 Restart=always
 RestartSec=2
