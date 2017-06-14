@@ -1,6 +1,6 @@
 ################################################################################
-#      This file is part of Alex@ELEC - http://www.alexelec.ru
-#      Copyright (C) 2011-2016 Alexandr Zuyev (alex@alexelec.ru)
+#      This file is part of Alex@ELEC - http://www.alexelec.in.ua
+#      Copyright (C) 2011-2017 Alexandr Zuyev (alex@alexelec.in.ua)
 ################################################################################
 
 PKG_NAME="vdr-plugin-mcli"
@@ -17,6 +17,7 @@ PKG_SHORTDESC="VDR access DVB-streams produced by the NetCeiver-hardware"
 PKG_LONGDESC="VDR access DVB-streams produced by the NetCeiver-hardware."
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
+PKG_LOCALE_INSTALL="yes"
 
 pre_configure_target() {
   export CFLAGS="$CFLAGS -fPIC"
@@ -42,23 +43,7 @@ makeinstall_target() {
        install
 }
 
-post_pkginstall_target() {
-  for i in $INSTALL $INSTALL/usr; do
-      rm -rf $i/include
-      rm -rf $i/lib/pkgconfig
-      rm -rf $i/share/man
-      find $i -name "*.la" -exec rm -f "{}" ";" 2>/dev/null || true
-      find $i -name "*.a" -exec rm -f "{}" ";" 2>/dev/null || true
-      find $i -name "*.so*T" -exec rm -f "{}" ";" 2>/dev/null || true
-      # patch backups nonsense
-      find $i -name "*.orig" -exec rm -f "{}" ";" 2>/dev/null || true
-  done
-
-  find $INSTALL -type d -exec rmdir -p "{}" ";" 2>/dev/null || true
-
-  $STRIP `find $INSTALL -name "*.so" 2>/dev/null` 2>/dev/null || :
-  $STRIP `find $INSTALL -name "*.so.[0-9]*" 2>/dev/null` 2>/dev/null || :
-
+post_makeinstall_target() {
   mkdir -p $INSTALL/usr/share
     cp -a locale $INSTALL/usr/share
 }

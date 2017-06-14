@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of Alex@ELEC - http://www.alexelec.in.ua
-#      Copyright (C) 2011-2015 Alexandr Zuyev (alex@alexelec.in.ua)
+#      Copyright (C) 2011-2017 Alexandr Zuyev (alex@alexelec.in.ua)
 ################################################################################
 
 PKG_NAME="vdr-plugin-xvdr"
@@ -17,6 +17,7 @@ PKG_SHORTDESC="TV"
 PKG_LONGDESC="TV"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
+PKG_LOCALE_INSTALL="yes"
 
 pre_configure_target() {
   export CFLAGS="$CFLAGS -fPIC"
@@ -26,15 +27,11 @@ pre_configure_target() {
 
 make_target() {
   VDR_DIR=$(get_build_dir vdr)
-  make VDRDIR=$VDR_DIR \
-       LIBDIR="." \
-       LOCALEDIR="./locale"
+  make VDRDIR=$VDR_DIR
 }
 
-makeinstall_target() {
-  mkdir -p $INSTALL/usr/lib/vdr
-    cp libvdr-*.so.* $INSTALL/usr/lib/vdr
+post_makeinstall_target() {
   mkdir -p $INSTALL/usr/config/vdr/plugins/xvdr
-    cp $PKG_DIR/config/allowed_hosts.conf $INSTALL/usr/config/vdr/plugins/xvdr/
-    cp xvdr/xvdr.conf $INSTALL/usr/config/vdr/plugins/xvdr/
+    cp $PKG_DIR/config/allowed_hosts.conf $INSTALL/usr/config/vdr/plugins/xvdr
+    cp xvdr/xvdr.conf $INSTALL/usr/config/vdr/plugins/xvdr
 }
