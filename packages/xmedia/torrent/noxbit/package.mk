@@ -4,12 +4,12 @@
 ################################################################################
 
 PKG_NAME="noxbit"
-PKG_VERSION="f8e4b90"
+PKG_VERSION="8142603"
 PKG_REV="2"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/AlexELEC/noxbit"
-PKG_URL="https://github.com/AlexELEC/noxbit/archive/$PKG_VERSION.tar.gz"
+PKG_GIT_URL="https://github.com/AlexELEC/noxbit.git"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="xmedia/torrent"
 PKG_SHORTDESC="NoxBit: Meet the New Generation of Live Video Streaming"
