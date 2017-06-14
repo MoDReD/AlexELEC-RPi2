@@ -50,11 +50,6 @@ IMAGE_NAME="$DISTRONAME-$TARGET_VERSION"
   mkdir -p $INSTALL/storage
   ln -sf /var/media $INSTALL/media
 
-  if [ "$TARGET_ARCH" = "x86_64" -o "$TARGET_ARCH" = "powerpc64" ]; then
-    ln -s /lib $INSTALL/lib64
-    ln -s lib $INSTALL/usr/lib64
-  fi
-
   echo "$DISTRONAME" > $INSTALL/etc/distribution
   echo "$PROJECT.$TARGET_ARCH" > $INSTALL/etc/arch
   echo "$ALEXELEC_VERSION" > $INSTALL/etc/version
@@ -70,8 +65,8 @@ IMAGE_NAME="$DISTRONAME-$TARGET_VERSION"
   echo -e "ID=\"alexelec\"" >> $INSTALL/etc/os-release
   echo -e "VERSION_ID=\"$OS_VERSION\"" >> $INSTALL/etc/os-release
   echo -e "PRETTY_NAME=\"$DISTRONAME ($([ "$RLS" = "yes" ] && echo "release" || echo "devel")) - Version: $ALEXELEC_VERSION\"" >> $INSTALL/etc/os-release
-  echo -e "HOME_URL=\"http://www.alexelec.ru\"" >> $INSTALL/etc/os-release
-  echo -e "BUG_REPORT_URL=\"http://forum.alexelec.ru\"" >> $INSTALL/etc/os-release
+  echo -e "HOME_URL=\"http://www.alexelec.in.ua\"" >> $INSTALL/etc/os-release
+  echo -e "BUG_REPORT_URL=\"http://forum.alexelec.in.ua\"" >> $INSTALL/etc/os-release
   if [ -n "$GIT_HASH" ]; then
 	echo -e "BUILD_ID=\"$GIT_HASH\"" >> $INSTALL/etc/os-release
   fi

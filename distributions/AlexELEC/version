@@ -8,4 +8,4 @@
   ADDON_VERSION="2.0"
 
 # RLS: set Release
-  RLS="yes"
+  RLS="no"
