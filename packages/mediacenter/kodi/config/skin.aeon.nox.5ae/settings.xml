@@ -5,13 +5,13 @@
     <setting id="sideblade_hidetimer" type="bool">false</setting>
     <setting id="sideblade_hidesearch" type="bool">false</setting>
     <setting id="VideoInfoPlotToggle" type="bool">false</setting>
-    <setting id="Disable.NextAired" type="bool">false</setting>
+    <setting id="Disable.NextAired" type="bool">true</setting>
     <setting id="Disable.Autocomplete" type="bool">false</setting>
     <setting id="Enable.SlimList" type="bool">true</setting>
     <setting id="Enable.HideRatings" type="bool">false</setting>
     <setting id="Disable.UnwatchedIcon" type="bool">false</setting>
     <setting id="nohighlist" type="bool">false</setting>
-    <setting id="SkinShortcuts-FullMenu" type="bool">true</setting>
+    <setting id="SkinShortcuts-FullMenu" type="bool">false</setting>
     <setting id="infobar_hidetencrypt" type="bool">false</setting>
     <setting id="infobar_hidesignalinfo" type="bool">false</setting>
     <setting id="infobar_hidetuners" type="bool">false</setting>
@@ -30,6 +30,7 @@
     <setting id="biggergap" type="bool">true</setting>
     <setting id="Disable.Videoinfo" type="bool">false</setting>
     <setting id="HorizontalListNav" type="bool">false</setting>
+    <setting id="Disable.Resumable" type="bool">false</setting>
     <setting id="VideoGenreFanartPath" type="string"></setting>
     <setting id="LiveTV.InfobarType" type="string"></setting>
     <setting id="MusicHomeItem.WidgetLabel" type="string"></setting>
@@ -78,7 +79,7 @@
     <setting id="Custom5HomeItem.Disable" type="string"></setting>
     <setting id="VideosHomeItem.InfoLine" type="string"></setting>
     <setting id="52.Movies.InfoPanel" type="string"></setting>
-    <setting id="ItemToEdit.WidgetLabel" type="string">Погода</setting>
+    <setting id="ItemToEdit.WidgetLabel" type="string"></setting>
     <setting id="LiveTV.EpgViewType" type="string"></setting>
     <setting id="InfoPanel.Delay" type="string"></setting>
     <setting id="ProgramsHomeItem.WidgetType" type="string"></setting>
@@ -149,7 +150,7 @@
     <setting id="MusicVideoHomeItem.Icon" type="string"></setting>
     <setting id="Custom1HomeItem.BGType" type="string"></setting>
     <setting id="MusicVideoHomeItem.SubMenu" type="string"></setting>
-    <setting id="ItemToEdit.Widget" type="string">11</setting>
+    <setting id="ItemToEdit.Widget" type="string"></setting>
     <setting id="LiveTVHomeItem.WidgetLabel" type="string"></setting>
     <setting id="LiveTVHomeItem.Label" type="string"></setting>
     <setting id="WeatherHomeItem.WidgetType" type="string">3</setting>
@@ -160,7 +161,7 @@
     <setting id="ShutdownHomeItem.WidgetType" type="string"></setting>
     <setting id="SettingsHomeItem.Icon" type="string"></setting>
     <setting id="MusicHomeItem.WidgetType" type="string"></setting>
-    <setting id="ItemToEdit.WidgetType" type="string">3</setting>
+    <setting id="ItemToEdit.WidgetType" type="string"></setting>
     <setting id="ProgramsHomeItem.SubMenu" type="string"></setting>
     <setting id="TVShowHomeItem.MultiFanart" type="string"></setting>
     <setting id="TVShowHomeItem.Label" type="string"></setting>
@@ -260,4 +261,6 @@
     <setting id="ShutdownHomeItem.BGType" type="string"></setting>
     <setting id="SettingsHomeItem.SubMenu" type="string"></setting>
     <setting id="TVShowHomeItem.Path" type="string"></setting>
+    <setting id="Overlay.Toggle" type="string"></setting>
+    <setting id="WeatherFanartDir" type="string">http://aeon-nox-background-packs.googlecode.com/svn/trunk/weather-fanart/default/</setting>
 </settings>

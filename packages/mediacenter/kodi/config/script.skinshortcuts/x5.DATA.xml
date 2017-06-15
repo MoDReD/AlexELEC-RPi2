@@ -2,11 +2,19 @@
 <shortcuts>
 	<shortcut>
 		<defaultID />
-		<label>Настройки</label>
+		<label>Системные</label>
 		<label2>Пользовательский элемент</label2>
 		<icon>DefaultShortcut.png</icon>
 		<thumb />
-		<action>RunAddOn(service.alexelec.settings)</action>
+		<action>RunAddOn(service.system.settings)</action>
+	</shortcut>
+	<shortcut>
+		<defaultID />
+		<label>Расширенные</label>
+		<label2>Пользовательский элемент</label2>
+		<icon>DefaultShortcut.png</icon>
+		<thumb />
+		<action>RunAddOn(service.advanced.settings)</action>
 	</shortcut>
 	<shortcut>
 		<defaultID />
