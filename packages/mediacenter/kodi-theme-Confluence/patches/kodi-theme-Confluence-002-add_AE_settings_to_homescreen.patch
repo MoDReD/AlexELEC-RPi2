@@ -1,0 +1,49 @@
+diff -Naurp kodi-theme-Confluence-16.1-c6f6e0b/720p/IncludesHomeMenuItems.xml kodi-theme-Confluence-16.1-c6f6e0b-patch/720p/IncludesHomeMenuItems.xml
+--- kodi-theme-Confluence-16.1-c6f6e0b/720p/IncludesHomeMenuItems.xml	2016-04-26 10:06:22.000000000 +0300
++++ kodi-theme-Confluence-16.1-c6f6e0b-patch/720p/IncludesHomeMenuItems.xml	2017-06-15 12:56:23.000000000 +0300
+@@ -180,8 +180,13 @@
+ 		</control>
+ 		<control type="button" id="90122">
+ 			<include>ButtonHomeSubCommonValues</include>
+-			<label>5</label>
+-			<onclick>ActivateWindow(Settings)</onclick>
++			<label>31921</label>
++			<onclick>RunAddon(service.system.settings)</onclick>
++		</control>
++		<control type="button" id="90120">
++			<include>ButtonHomeSubCommonValues</include>
++			<label>31922</label>
++			<onclick>RunAddon(service.advanced.settings)</onclick>
+ 		</control>
+ 		<control type="button" id="90123">
+ 			<include>ButtonHomeSubCommonValues</include>
+diff -Naurp kodi-theme-Confluence-16.1-c6f6e0b/language/resource.language.en_gb/strings.po kodi-theme-Confluence-16.1-c6f6e0b-patch/language/resource.language.en_gb/strings.po
+--- kodi-theme-Confluence-16.1-c6f6e0b/language/resource.language.en_gb/strings.po	2016-04-26 10:06:22.000000000 +0300
++++ kodi-theme-Confluence-16.1-c6f6e0b-patch/language/resource.language.en_gb/strings.po	2017-06-15 12:55:51.000000000 +0300
+@@ -705,3 +705,11 @@ msgstr ""
+ msgctxt "#31960"
+ msgid "RADIO"
+ msgstr ""
++
++msgctxt "#31921"
++msgid "System"
++msgstr ""
++
++msgctxt "#31922"
++msgid "Advanced"
++msgstr ""
+diff -Naurp kodi-theme-Confluence-16.1-c6f6e0b/language/resource.language.ru_ru/strings.po kodi-theme-Confluence-16.1-c6f6e0b-patch/language/resource.language.ru_ru/strings.po
+--- kodi-theme-Confluence-16.1-c6f6e0b/language/resource.language.ru_ru/strings.po	2016-04-26 10:06:22.000000000 +0300
++++ kodi-theme-Confluence-16.1-c6f6e0b-patch/language/resource.language.ru_ru/strings.po	2017-06-15 12:58:00.000000000 +0300
+@@ -603,3 +603,11 @@ msgstr "СИСТЕМА"
+ msgctxt "#31960"
+ msgid "RADIO"
+ msgstr "РАДИО"
++
++msgctxt "#31921"
++msgid "System"
++msgstr "Системные"
++
++msgctxt "#31922"
++msgid "Advanced"
++msgstr "Расширенные"
