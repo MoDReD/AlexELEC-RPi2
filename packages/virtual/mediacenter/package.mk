@@ -30,6 +30,7 @@ done
 
 # system config addons
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET rpi.system.settings"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET rpi.advanced.settings"
 
   if [ "$KODI_LANGUAGE_ADDONS" = "yes" ]; then
     PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET kodi-language-addons"
