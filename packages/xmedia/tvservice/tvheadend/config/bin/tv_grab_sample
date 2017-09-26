@@ -13,9 +13,9 @@ XMLTV_TYPE="WEB"
 
 XMLTV_LOCATION_FILE=
 
-### XMLTV_LOCATION_WEB value: http://www.teleguide.info/download/new3/xmltv.xml.gz
+### XMLTV_LOCATION_WEB value: https://download2.teleguide.info/download/new3/xmltv.xml"
 
-XMLTV_LOCATION_WEB="http://www.teleguide.info/download/new3/xmltv.xml.gz"
+XMLTV_LOCATION_WEB=
 
 ### XMLTV_LOCATION_SCRIPT value: /storage/.config/tvheadend/script.sh
 XMLTV_LOCATION_SCRIPT=
@@ -58,7 +58,7 @@ done
 
 if [ -n "$dflag" ]
 then
-  echo "tv_grab_file is a simple grabber"
+  echo "sample grabber"
 fi
 
 if [ -n "$vflag" ]
