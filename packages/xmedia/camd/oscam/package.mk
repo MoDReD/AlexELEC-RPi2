@@ -4,9 +4,9 @@
 ################################################################################
 
 PKG_NAME="oscam"
-PKG_VERSION="d6fe72c"
-PKG_VERSION_NUMBER="11350"
-PKG_REV="104"
+PKG_VERSION="2563c02"
+PKG_VERSION_NUMBER="11391"
+PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.streamboard.tv/oscam/wiki"
@@ -23,6 +23,11 @@ unpack() {
   tar -xzf $SOURCES/$PKG_NAME/$PKG_VERSION.tar.gz -C $BUILD
 }
 
+pre_configure_target() {
+  export OSCAM_VERSION_NUMBER="$PKG_VERSION_NUMBER"
+  cp -f $PKG_DIR/config/SoftCam.Key $ROOT/$PKG_BUILD
+}
+
 configure_target() {
   cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_CONF \
         -DCMAKE_INSTALL_PREFIX=/usr \
@@ -31,6 +36,7 @@ configure_target() {
         -DHAVE_LIBCRYPTO=0 \
         -DHAVE_DVBAPI=1 -DWITH_STAPI=0 \
         -DWEBIF=1 \
+        -DWITH_EMU=1 \
         -DWITH_DEBUG=0 \
         -DOPTIONAL_INCLUDE_DIR=$SYSROOT_PREFIX/usr/include \
         -DSTATIC_LIBUSB=1 \
@@ -41,6 +47,7 @@ configure_target() {
 makeinstall_target() {
   mkdir -p  $INSTALL/usr/config/oscam
     cp -a $PKG_DIR/config $INSTALL/usr/config/oscam
+    rm -f $INSTALL/usr/config/oscam/config/SoftCam.Key
 
   mkdir -p  $INSTALL/usr/bin
     cp $ROOT/$PKG_BUILD/.$TARGET_NAME/oscam $INSTALL/usr/bin
