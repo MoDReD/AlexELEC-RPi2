@@ -23,7 +23,7 @@ PKG_AUTORECONF="no"
 
 # tools
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET mc raspi2png scan-s2 boblightd"
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET scan-m3u inputlirc htop davfs2"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET scan-m3u inputlirc htop davfs2 tor"
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET minidlna dispmanx_vnc plexmediaserver"
 
 # torrent
